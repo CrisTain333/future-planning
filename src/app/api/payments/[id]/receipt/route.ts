@@ -114,6 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
   } catch (error) {
+    console.error("Receipt generation error:", error);
     return NextResponse.json({ success: false, error: "Failed to generate receipt" }, { status: 500 });
   }
 }

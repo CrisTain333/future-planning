@@ -19,7 +19,7 @@ const UserSchema = new Schema<IUserDocument>(
   {
     fullName: { type: String, required: true },
     username: { type: String, required: true, unique: true, lowercase: true },
-    email: { type: String, sparse: true },
+    email: { type: String, unique: true, sparse: true },
     password: { type: String, required: true },
     phone: { type: String },
     address: { type: String },
@@ -33,8 +33,6 @@ const UserSchema = new Schema<IUserDocument>(
   },
   { timestamps: true }
 );
-
-UserSchema.index({ email: 1 }, { unique: true, sparse: true });
 
 const User = mongoose.models.User || mongoose.model<IUserDocument>("User", UserSchema);
 export default User;
