@@ -96,7 +96,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     }
 
     const formData = new FormData();
-    formData.append("profilePicture", file);
+    formData.append("file", file);
 
     try {
       await uploadPicture(formData).unwrap();

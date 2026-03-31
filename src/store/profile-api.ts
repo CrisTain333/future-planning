@@ -29,7 +29,12 @@ export const profileApi = api.injectEndpoints({
       query: (body) => ({ url: "/profile/password", method: "PUT", body }),
     }),
     uploadProfilePicture: builder.mutation<ApiResponse<IUser>, FormData>({
-      query: (formData) => ({ url: "/profile/picture", method: "POST", body: formData }),
+      query: (formData) => ({
+        url: "/profile/picture",
+        method: "POST",
+        body: formData,
+        formData: true,
+      }),
       invalidatesTags: ["Users"],
     }),
   }),

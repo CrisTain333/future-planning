@@ -68,6 +68,12 @@ export async function POST(req: NextRequest) {
       message: "Profile picture updated successfully",
     });
   } catch (error) {
-    return NextResponse.json({ success: false, error: "Failed to upload picture" }, { status: 500 });
+    console.error("Profile picture upload error:", error);
+    const err = error as { http_code?: number; message?: string };
+    if (err.http_code === 401) {
+      return NextResponse.json({ success: false, error: "Cloudinary credentials are invalid. Please check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env.local" }, { status: 500 });
+    }
+    const message = error instanceof Error ? error.message : "Failed to upload picture";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
