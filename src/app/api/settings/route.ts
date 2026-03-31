@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Settings from "@/models/Settings";
@@ -20,5 +20,24 @@ export async function GET() {
     return NextResponse.json({ success: true, data: settings });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to fetch settings" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const session = await auth();
+    const currentUser = session?.user as unknown as { userId: string; role: string } | undefined;
+    if (!currentUser || currentUser.role !== "admin") {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    await dbConnect();
+    const body = await req.json();
+
+    const settings = await Settings.findOneAndUpdate({}, body, { new: true, upsert: true });
+
+    return NextResponse.json({ success: true, data: settings, message: "Settings updated successfully" });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: "Failed to update settings" }, { status: 500 });
   }
 }
