@@ -46,7 +46,10 @@ export function Header() {
       label: 'Log out',
       icon: <LogOut className="h-4 w-4" />,
       danger: true,
-      onClick: () => signOut({ callbackUrl: "/login" }),
+      onClick: async () => {
+        await signOut({ redirect: false });
+        window.location.href = "/login";
+      },
     },
   ];
 
