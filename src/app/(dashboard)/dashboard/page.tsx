@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import AdminDashboard from "@/components/dashboard/admin-dashboard";
+import MemberDashboard from "@/components/dashboard/member-dashboard";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -11,11 +12,5 @@ export default function DashboardPage() {
     return <AdminDashboard />;
   }
 
-  // Member dashboard placeholder (Phase 3)
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-muted-foreground">Member dashboard coming in Phase 3.</p>
-    </div>
-  );
+  return <MemberDashboard />;
 }
