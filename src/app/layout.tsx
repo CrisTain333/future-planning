@@ -5,6 +5,7 @@ import ReduxProvider from "@/components/providers/redux-provider";
 import SessionProvider from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ConfigProvider } from "antd";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"] });
 
