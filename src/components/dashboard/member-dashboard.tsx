@@ -302,7 +302,7 @@ export default function MemberDashboard() {
                   />
                   <Bar
                     dataKey="amount"
-                    fill="hsl(153, 50%, 40%)"
+                    fill="hsl(348, 83%, 62%)"
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>

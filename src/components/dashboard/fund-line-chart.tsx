@@ -48,7 +48,7 @@ export function FundLineChart({ data }: FundLineChartProps) {
               <Line
                 type="monotone"
                 dataKey="total"
-                stroke="hsl(153, 50%, 40%)"
+                stroke="hsl(348, 83%, 62%)"
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 activeDot={{ r: 5 }}
