@@ -67,7 +67,7 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
 
 export function Sidebar() {
   return (
-    <aside className="hidden md:flex md:w-64 md:flex-col md:border-r bg-card h-screen sticky top-0">
+    <aside className="hidden md:flex md:w-64 md:flex-col h-screen sticky top-0 glass-sidebar">
       <SidebarContent />
     </aside>
   );
