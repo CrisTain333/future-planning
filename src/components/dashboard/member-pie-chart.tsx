@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const COLORS = [
-  "hsl(348, 83%, 62%)",
+  "hsl(181, 87%, 31%)",
   "hsl(200, 60%, 50%)",
   "hsl(280, 50%, 55%)",
   "hsl(35, 80%, 55%)",
