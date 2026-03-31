@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/store/settings-api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -69,7 +68,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 max-w-2xl">
+      <div className="space-y-4 max-w-3xl mx-auto">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -77,59 +76,65 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-2">
-        <Settings className="h-6 w-6" />
-        <h1 className="text-2xl font-bold">Application Settings</h1>
+    <div className="space-y-6 max-w-3xl mx-auto">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <Settings className="h-6 w-6 text-primary" />
+          Application Settings
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Configure foundation details and contribution amounts
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Foundation Configuration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="p-6 border-b border-white/20">
+          <h2 className="text-lg font-semibold">Foundation Configuration</h2>
+          <p className="text-sm text-muted-foreground">These settings affect payments and receipts</p>
+        </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="foundationName">Foundation Name</Label>
+            <Input id="foundationName" {...register("foundationName")} className="bg-white/50" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="foundationName">Foundation Name</Label>
-              <Input id="foundationName" {...register("foundationName")} />
+              <Label htmlFor="monthlyAmount">Monthly Amount (BDT)</Label>
+              <Input id="monthlyAmount" type="number" {...register("monthlyAmount")} className="bg-white/50" />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="monthlyAmount">Monthly Amount (BDT)</Label>
-                <Input id="monthlyAmount" type="number" {...register("monthlyAmount")} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="initialAmount">Initial Amount (BDT)</Label>
-                <Input id="initialAmount" type="number" {...register("initialAmount")} />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="initialAmount">Initial Amount (BDT)</Label>
+              <Input id="initialAmount" type="number" {...register("initialAmount")} className="bg-white/50" />
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startMonth">Start Month</Label>
-                <select
-                  id="startMonth"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  {...register("startMonth")}
-                >
-                  {MONTHS.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="startYear">Start Year</Label>
-                <Input id="startYear" type="number" {...register("startYear")} />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startMonth">Start Month</Label>
+              <select
+                id="startMonth"
+                className="flex h-10 w-full rounded-md border border-input bg-white/50 px-3 py-2 text-sm"
+                {...register("startMonth")}
+              >
+                {MONTHS.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="startYear">Start Year</Label>
+              <Input id="startYear" type="number" {...register("startYear")} className="bg-white/50" />
+            </div>
+          </div>
 
-            <Button type="submit" disabled={updating}>
+          <div className="pt-2">
+            <Button type="submit" className="glow-primary" disabled={updating}>
               {updating ? "Saving..." : "Save Settings"}
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -18,20 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Camera } from "lucide-react";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
 
@@ -73,6 +66,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   });
 
   const bloodGroupValue = watch("bloodGroup");
+  const initials = getInitials(user.fullName);
 
   async function onSubmit(data: UpdateProfileInput) {
     try {
@@ -125,47 +119,48 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>Update your personal details</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col items-center gap-3 mb-6">
-          <Avatar className="size-20">
-            {user.profilePicture ? (
-              <AvatarImage src={user.profilePicture} alt={user.fullName} />
-            ) : null}
-            <AvatarFallback className="text-lg">
-              {getInitials(user.fullName)}
-            </AvatarFallback>
-          </Avatar>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handlePhotoClick}
-            disabled={isUploading}
-          >
-            {isUploading ? "Uploading..." : "Change Photo"}
-          </Button>
-        </div>
+    <div className="glass-card rounded-xl overflow-hidden">
+      {/* Card Header */}
+      <div className="p-6 border-b border-white/20">
+        <h2 className="text-lg font-semibold">Profile Information</h2>
+        <p className="text-sm text-muted-foreground">Update your personal details</p>
+      </div>
 
-        <form
-          id="profile-form"
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
+      {/* Avatar Section */}
+      <div className="p-6 flex flex-col items-center gap-3 border-b border-white/10">
+        <Avatar className="h-24 w-24 ring-4 ring-white/50">
+          {user.profilePicture ? (
+            <AvatarImage src={user.profilePicture} alt={user.fullName} />
+          ) : null}
+          <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handlePhotoClick}
+          disabled={isUploading}
         >
+          <Camera className="h-4 w-4 mr-2" />
+          {isUploading ? "Uploading..." : "Change Photo"}
+        </Button>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="fullName">Full Name</Label>
-            <Input id="fullName" {...register("fullName")} />
+            <Input id="fullName" {...register("fullName")} className="bg-white/50" />
             {errors.fullName && (
               <p className="text-xs text-destructive">{errors.fullName.message}</p>
             )}
@@ -173,15 +168,17 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
           <div className="space-y-1.5">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" {...register("username")} />
+            <Input id="username" {...register("username")} className="bg-white/50" />
             {errors.username && (
               <p className="text-xs text-destructive">{errors.username.message}</p>
             )}
           </div>
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("email")} />
+            <Input id="email" type="email" {...register("email")} className="bg-white/50" />
             {errors.email && (
               <p className="text-xs text-destructive">{errors.email.message}</p>
             )}
@@ -189,56 +186,57 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
           <div className="space-y-1.5">
             <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" {...register("phone")} />
+            <Input id="phone" {...register("phone")} className="bg-white/50" />
             {errors.phone && (
               <p className="text-xs text-destructive">{errors.phone.message}</p>
             )}
           </div>
+        </div>
 
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" {...register("address")} />
-            {errors.address && (
-              <p className="text-xs text-destructive">{errors.address.message}</p>
-            )}
-          </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="address">Address</Label>
+          <Input id="address" {...register("address")} className="bg-white/50" />
+          {errors.address && (
+            <p className="text-xs text-destructive">{errors.address.message}</p>
+          )}
+        </div>
 
-          <div className="space-y-1.5">
-            <Label>Blood Group</Label>
-            <Select
-              value={bloodGroupValue ?? ""}
-              onValueChange={(val: string | null) =>
-                setValue(
-                  "bloodGroup",
-                  (val || undefined) as UpdateProfileInput["bloodGroup"],
-                  { shouldValidate: true }
-                )
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select blood group" />
-              </SelectTrigger>
-              <SelectContent>
-                {BLOOD_GROUPS.map((bg) => (
-                  <SelectItem key={bg} value={bg}>
-                    {bg}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.bloodGroup && (
-              <p className="text-xs text-destructive">
-                {errors.bloodGroup.message}
-              </p>
-            )}
-          </div>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button type="submit" form="profile-form" disabled={isUpdating}>
-          {isUpdating ? "Saving..." : "Save Changes"}
-        </Button>
-      </CardFooter>
-    </Card>
+        <div className="space-y-1.5">
+          <Label>Blood Group</Label>
+          <Select
+            value={bloodGroupValue ?? ""}
+            onValueChange={(val: string | null) =>
+              setValue(
+                "bloodGroup",
+                (val || undefined) as UpdateProfileInput["bloodGroup"],
+                { shouldValidate: true }
+              )
+            }
+          >
+            <SelectTrigger className="w-full bg-white/50">
+              <SelectValue placeholder="Select blood group" />
+            </SelectTrigger>
+            <SelectContent>
+              {BLOOD_GROUPS.map((bg) => (
+                <SelectItem key={bg} value={bg}>
+                  {bg}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.bloodGroup && (
+            <p className="text-xs text-destructive">
+              {errors.bloodGroup.message}
+            </p>
+          )}
+        </div>
+
+        <div className="pt-2">
+          <Button type="submit" className="glow-primary" disabled={isUpdating}>
+            {isUpdating ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }

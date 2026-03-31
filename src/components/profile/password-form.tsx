@@ -11,14 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
 
 export default function PasswordForm() {
   const [changePassword, { isLoading }] = useChangePasswordMutation();
@@ -54,25 +46,20 @@ export default function PasswordForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Change Password</CardTitle>
-        <CardDescription>
-          Update your password to keep your account secure
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          id="password-form"
-          onSubmit={handleSubmit(onSubmit)}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-        >
+    <div className="glass-card rounded-xl overflow-hidden">
+      <div className="p-6 border-b border-white/20">
+        <h2 className="text-lg font-semibold">Change Password</h2>
+        <p className="text-sm text-muted-foreground">Update your password to keep your account secure</p>
+      </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="currentPassword">Current Password</Label>
             <Input
               id="currentPassword"
               type="password"
               {...register("currentPassword")}
+              className="bg-white/50"
             />
             {errors.currentPassword && (
               <p className="text-xs text-destructive">
@@ -87,6 +74,7 @@ export default function PasswordForm() {
               id="newPassword"
               type="password"
               {...register("newPassword")}
+              className="bg-white/50"
             />
             {errors.newPassword && (
               <p className="text-xs text-destructive">
@@ -94,13 +82,14 @@ export default function PasswordForm() {
               </p>
             )}
           </div>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button type="submit" form="password-form" disabled={isLoading}>
-          {isLoading ? "Changing..." : "Change Password"}
-        </Button>
-      </CardFooter>
-    </Card>
+        </div>
+
+        <div className="pt-2">
+          <Button type="submit" className="glow-primary" disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Password"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 }
