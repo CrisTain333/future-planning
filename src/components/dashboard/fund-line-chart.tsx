@@ -33,7 +33,7 @@ export function FundLineChart({ data }: FundLineChartProps) {
   }));
 
   return (
-    <Card>
+    <Card className="glass-card">
       <CardHeader>
         <CardTitle>Total Fund Over Time</CardTitle>
       </CardHeader>

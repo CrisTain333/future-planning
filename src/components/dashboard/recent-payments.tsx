@@ -23,7 +23,7 @@ interface RecentPaymentsProps {
 
 export function RecentPayments({ payments }: RecentPaymentsProps) {
   return (
-    <Card>
+    <Card className="glass-card">
       <CardHeader>
         <CardTitle>Recent Payments</CardTitle>
       </CardHeader>

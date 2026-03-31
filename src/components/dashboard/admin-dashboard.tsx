@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useGetAdminDashboardQuery } from "@/store/dashboard-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -64,44 +65,63 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-4">
       {/* Row 1: Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
         <FundLineChart data={dashboard.fundGrowthChart} />
         <MemberPieChart data={dashboard.memberShareChart} />
-      </div>
+      </motion.div>
 
       {/* Row 2: Recent Activity */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
         <RecentPayments payments={dashboard.recentPayments} />
         <RecentNotices />
-      </div>
+      </motion.div>
 
       {/* Row 3: Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.5 }}
+      >
         <StatCard
           title="Total Fund"
           value={`৳${dashboard.totalFund.toLocaleString()}`}
           icon={DollarSign}
           description="Cumulative fund balance"
+          index={0}
         />
         <StatCard
           title="Total Members"
           value={dashboard.totalMembers}
           icon={Users}
           description="Active members"
+          index={1}
         />
         <StatCard
           title="Payments This Month"
           value={dashboard.paymentsThisMonth.count}
           icon={CreditCard}
           description={`৳${dashboard.paymentsThisMonth.amount.toLocaleString()} collected`}
+          index={2}
         />
         <StatCard
           title="Overdue"
           value={dashboard.overdueCount}
           icon={AlertTriangle}
           description="Pending payments"
+          index={3}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }

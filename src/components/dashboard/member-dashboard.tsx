@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   BarChart,
   Bar,
@@ -233,31 +234,45 @@ export default function MemberDashboard() {
   return (
     <div className="space-y-4">
       {/* Row 1: Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.div
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <StatCard
           title="Total Paid"
           value={`৳${(dashboard?.totalPaid ?? 0).toLocaleString()}`}
           icon={Wallet}
+          index={0}
         />
         <StatCard
           title="Months Paid"
           value={dashboard?.monthsPaid ?? 0}
           icon={CalendarCheck}
+          index={1}
         />
         <StatCard
           title="Outstanding"
           value={`৳${(dashboard?.outstanding ?? 0).toLocaleString()}`}
           icon={AlertCircle}
+          index={2}
         />
         <StatCard
           title="Status"
           value={statusLabel}
           icon={statusIsDue ? Clock : CheckCircle}
+          index={3}
         />
-      </div>
+      </motion.div>
 
       {/* Row 2: Payment Bar Chart */}
-      <Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle>Monthly Payments</CardTitle>
         </CardHeader>
@@ -300,9 +315,15 @@ export default function MemberDashboard() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Row 3: Recent Notices */}
-      <Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle>Recent Notices</CardTitle>
         </CardHeader>
@@ -318,9 +339,15 @@ export default function MemberDashboard() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Row 4: Payment History Table */}
-      <Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle>Payment History</CardTitle>
         </CardHeader>
@@ -438,6 +465,7 @@ export default function MemberDashboard() {
           )}
         </CardContent>
       </Card>
+      </motion.div>
     </div>
   );
 }

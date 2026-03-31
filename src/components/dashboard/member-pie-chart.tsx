@@ -36,7 +36,7 @@ interface MemberPieChartProps {
 
 export function MemberPieChart({ data }: MemberPieChartProps) {
   return (
-    <Card>
+    <Card className="glass-card">
       <CardHeader>
         <CardTitle>Member Contribution Share</CardTitle>
       </CardHeader>

@@ -10,7 +10,7 @@ export function RecentNotices() {
   const notices = data?.data || [];
 
   return (
-    <Card>
+    <Card className="glass-card">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Recent Notices</CardTitle>
         <Megaphone className="h-4 w-4 text-muted-foreground" />
