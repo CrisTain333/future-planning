@@ -100,25 +100,25 @@ function DashboardSkeleton() {
   );
 }
 
-interface IPayment {
+interface PaymentItem {
   _id: string;
   month: number;
   year: number;
   amount: number;
   penalty: number;
-  approvedBy: { fullName: string };
+  approvedBy: string | { fullName: string };
   receiptNo: string;
   createdAt: string;
 }
 
-interface INotice {
+interface NoticeItem {
   _id: string;
   title: string;
   body: string;
   createdAt: string;
 }
 
-function NoticeItem({ notice }: { notice: INotice }) {
+function NoticeCard({ notice }: { notice: NoticeItem }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -152,7 +152,7 @@ function NoticeItem({ notice }: { notice: INotice }) {
   );
 }
 
-function PaymentCardMobile({ payment, index }: { payment: IPayment; index: number }) {
+function PaymentCardMobile({ payment, index }: { payment: PaymentItem; index: number }) {
   return (
     <Card>
       <CardContent className="p-4 space-y-2">
@@ -179,7 +179,7 @@ function PaymentCardMobile({ payment, index }: { payment: IPayment; index: numbe
           )}
         </div>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Approved by: {payment.approvedBy?.fullName ?? "—"}</span>
+          <span>Approved by: {typeof payment.approvedBy === "object" ? payment.approvedBy?.fullName : "—"}</span>
           <Button
             variant="ghost"
             size="icon-xs"
@@ -205,16 +205,16 @@ export default function MemberDashboard() {
     page,
     limit,
   });
-  const { data: noticeRes } = useGetNoticesQuery();
+  const { data: noticeRes } = useGetNoticesQuery({ page: 1, limit: 4 });
 
   if (dashLoading) {
     return <DashboardSkeleton />;
   }
 
   const dashboard = dashRes?.data;
-  const payments: IPayment[] = payRes?.data ?? [];
+  const payments: PaymentItem[] = payRes?.data ?? [];
   const pagination = payRes?.pagination;
-  const notices: INotice[] = noticeRes?.data ?? [];
+  const notices: NoticeItem[] = noticeRes?.data ?? [];
   const recentNotices = notices.slice(0, 4);
 
   const statusIsDue =
@@ -223,8 +223,8 @@ export default function MemberDashboard() {
       : (dashboard?.outstanding ?? 0) > 0;
 
   const chartData = (dashboard?.chartData ?? []).map(
-    (entry: { month: number; year: number; amount: number }) => ({
-      label: `${MONTHS[entry.month - 1]} '${String(entry.year).slice(-2)}`,
+    (entry) => ({
+      label: entry.month,
       amount: entry.amount,
     })
   );
@@ -315,7 +315,7 @@ export default function MemberDashboard() {
           {recentNotices.length > 0 ? (
             <div className="space-y-3">
               {recentNotices.map((notice) => (
-                <NoticeItem key={notice._id} notice={notice} />
+                <NoticeCard key={notice._id} notice={notice} />
               ))}
             </div>
           ) : (
@@ -380,7 +380,7 @@ export default function MemberDashboard() {
                             : "—"}
                         </TableCell>
                         <TableCell>
-                          {payment.approvedBy?.fullName ?? "—"}
+                          {typeof payment.approvedBy === "object" ? payment.approvedBy?.fullName : "—"}
                         </TableCell>
                         <TableCell>
                           <Button
