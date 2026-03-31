@@ -28,7 +28,7 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileX2 } from "lucide-react";
+import { FileX2, ScrollText } from "lucide-react";
 
 const ACTION_LABELS: Record<string, string> = {
   payment_created: "Payment Created",
@@ -60,21 +60,6 @@ interface AuditLogEntry {
   createdAt: string;
 }
 
-function formatDetails(details: Record<string, unknown>): string {
-  if (!details || Object.keys(details).length === 0) return "—";
-  return Object.entries(details)
-    .map(([key, value]) => {
-      const label = key
-        .replace(/([A-Z])/g, " $1")
-        .replace(/_/g, " ")
-        .replace(/^\w/, (c) => c.toUpperCase());
-      const displayValue =
-        typeof value === "object" ? JSON.stringify(value) : String(value);
-      return `${label}: ${displayValue}`;
-    })
-    .join(", ");
-}
-
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
     year: "numeric",
@@ -83,6 +68,30 @@ function formatDate(dateStr: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function FormattedDetails({ details }: { details: Record<string, unknown> }) {
+  if (!details || Object.keys(details).length === 0) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  return (
+    <div className="text-xs space-y-0.5">
+      {Object.entries(details).map(([key, val]) => {
+        const label = key
+          .replace(/([A-Z])/g, " $1")
+          .replace(/_/g, " ")
+          .replace(/^\w/, (c) => c.toUpperCase());
+        const displayValue =
+          typeof val === "object" ? JSON.stringify(val) : String(val);
+        return (
+          <div key={key}>
+            <span className="font-medium text-muted-foreground">{label}:</span>{" "}
+            <span>{displayValue}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function TableSkeleton() {
@@ -139,73 +148,89 @@ export default function AuditLogsPage() {
 
   const logs: AuditLogEntry[] = auditData?.data ?? [];
   const pagination = auditData?.pagination;
+  const total = pagination?.total ?? 0;
   const totalPages = pagination?.totalPages ?? 1;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <h1 className="text-2xl font-bold">Audit Logs</h1>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+          <ScrollText className="h-6 w-6 text-primary" />
+          Audit Logs
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Track all system actions and changes
+        </p>
+      </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="space-y-1.5">
-          <span className="text-sm font-medium">Action</span>
-          <Select
-            value={filterAction || undefined}
-            onValueChange={(val) => {
-              setFilterAction(val as string);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All actions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All actions</SelectItem>
-              {ACTION_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Filters Card */}
+      <div className="glass-card rounded-xl p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium">Action</span>
+            <Select
+              value={filterAction || undefined}
+              onValueChange={(val) => {
+                setFilterAction(val as string);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-48 bg-white/50">
+                <SelectValue placeholder="All actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All actions</SelectItem>
+                {ACTION_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-1.5">
-          <span className="text-sm font-medium">Performed By</span>
-          <Select
-            value={filterPerformedBy || undefined}
-            onValueChange={(val) => {
-              setFilterPerformedBy(val as string);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All users" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All users</SelectItem>
-              {users.map((user: IUser) => (
-                <SelectItem key={user._id} value={user._id}>
-                  {user.fullName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium">Performed By</span>
+            <Select
+              value={filterPerformedBy || undefined}
+              onValueChange={(val) => {
+                setFilterPerformedBy(val as string);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-48 bg-white/50">
+                <SelectValue placeholder="All users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All users</SelectItem>
+                {users.map((user: IUser) => (
+                  <SelectItem key={user._id} value={user._id}>
+                    {user.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <TableSkeleton />
-      ) : logs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
-          <FileX2 className="h-10 w-10" />
-          <p className="text-sm">No audit logs found.</p>
+      {/* Table Card */}
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-white/20">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            {total} audit entries
+          </h2>
         </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto p-0">
+          {isLoading ? (
+            <TableSkeleton />
+          ) : logs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
+              <FileX2 className="h-10 w-10" />
+              <p className="text-sm">No audit logs found.</p>
+            </div>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -228,8 +253,8 @@ export default function AuditLogsPage() {
                     <TableCell>
                       {typeof log.targetUser === "object" && log.targetUser ? log.targetUser.fullName : "—"}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate text-muted-foreground">
-                      {formatDetails(log.details)}
+                    <TableCell className="max-w-xs">
+                      <FormattedDetails details={log.details} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(log.createdAt)}
@@ -238,10 +263,10 @@ export default function AuditLogsPage() {
                 ))}
               </TableBody>
             </Table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
+          )}
+        </div>
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-white/20">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -283,9 +308,9 @@ export default function AuditLogsPage() {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-          )}
-        </>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
