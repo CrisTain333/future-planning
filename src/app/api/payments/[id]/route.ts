@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import { updatePaymentSchema } from "@/validations/payment";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -52,6 +53,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Payment not found" }, { status: 404 });
     }
 
+    await createAuditLog("payment_edited", currentUser.userId, { changes: parsed.data }, id);
+
     return NextResponse.json({ success: true, data: payment, message: "Payment updated successfully" });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to update payment" }, { status: 500 });
@@ -82,6 +85,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!payment) {
       return NextResponse.json({ success: false, error: "Payment not found" }, { status: 404 });
     }
+
+    await createAuditLog("payment_deleted", currentUser.userId, { paymentId: id });
 
     return NextResponse.json({ success: true, data: null, message: "Payment deleted successfully" });
   } catch (error) {

@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { updateUserSchema } from "@/validations/user";
 import bcrypt from "bcryptjs";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
@@ -97,6 +98,8 @@ export async function PUT(
         { status: 404 }
       );
     }
+
+    await createAuditLog("user_edited", currentUser.userId, { changes: parsed.data }, id);
 
     return NextResponse.json({
       success: true,

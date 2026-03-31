@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
+import { createAuditLog } from "@/lib/audit";
 
 export async function PATCH(
   req: NextRequest,
@@ -48,6 +49,8 @@ export async function PATCH(
 
     const userObj = user.toObject();
     delete userObj.password;
+
+    await createAuditLog(user.isDisabled ? "user_disabled" : "user_enabled", currentUser.userId, {}, id);
 
     return NextResponse.json({
       success: true,

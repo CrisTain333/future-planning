@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Notice from "@/models/Notice";
 import { updateNoticeSchema } from "@/validations/notice";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -45,6 +46,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Notice not found" }, { status: 404 });
     }
 
+    await createAuditLog("notice_edited", currentUser.userId, { changes: parsed.data });
+
     return NextResponse.json({ success: true, data: notice, message: "Notice updated successfully" });
   } catch (error) {
     return NextResponse.json({ success: false, error: "Failed to update notice" }, { status: 500 });
@@ -65,6 +68,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!notice) {
       return NextResponse.json({ success: false, error: "Notice not found" }, { status: 404 });
     }
+
+    await createAuditLog("notice_deleted", currentUser.userId, { noticeId: id });
 
     return NextResponse.json({ success: true, data: null, message: "Notice deleted successfully" });
   } catch (error) {

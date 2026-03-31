@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { createUserSchema } from "@/validations/user";
 import bcrypt from "bcryptjs";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -106,6 +107,8 @@ export async function POST(req: NextRequest) {
 
     const userObj = user.toObject();
     delete userObj.password;
+
+    await createAuditLog("user_created", currentUser.userId, { username: rest.username, role: rest.role }, user._id.toString());
 
     return NextResponse.json(
       { success: true, data: userObj, message: "User created successfully" },

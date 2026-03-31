@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import { createPaymentSchema } from "@/validations/payment";
 import { createPaymentNotification } from "@/lib/notifications";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -100,6 +101,8 @@ export async function POST(req: NextRequest) {
     const populated = await Payment.findById(payment._id)
       .populate("userId", "fullName username")
       .populate("approvedBy", "fullName");
+
+    await createAuditLog("payment_created", currentUser.userId, { amount: parsed.data.amount, month: parsed.data.month, year: parsed.data.year }, parsed.data.userId);
 
     const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     await createPaymentNotification(
