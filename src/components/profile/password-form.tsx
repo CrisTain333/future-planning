@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useChangePasswordMutation } from "@/store/profile-api";
@@ -8,15 +8,13 @@ import {
   changePasswordSchema,
   type ChangePasswordInput,
 } from "@/validations/user";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Input } from "antd";
 
 export default function PasswordForm() {
   const [changePassword, { isLoading }] = useChangePasswordMutation();
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -54,12 +52,17 @@ export default function PasswordForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="currentPassword">Current Password</Label>
-            <Input
-              id="currentPassword"
-              type="password"
-              {...register("currentPassword")}
-              className="bg-white/50"
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="currentPassword">Current Password</label>
+            <Controller
+              name="currentPassword"
+              control={control}
+              render={({ field }) => (
+                <Input.Password
+                  {...field}
+                  id="currentPassword"
+                  status={errors.currentPassword ? "error" : undefined}
+                />
+              )}
             />
             {errors.currentPassword && (
               <p className="text-xs text-destructive">
@@ -69,12 +72,17 @@ export default function PasswordForm() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="newPassword">New Password</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              {...register("newPassword")}
-              className="bg-white/50"
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="newPassword">New Password</label>
+            <Controller
+              name="newPassword"
+              control={control}
+              render={({ field }) => (
+                <Input.Password
+                  {...field}
+                  id="newPassword"
+                  status={errors.newPassword ? "error" : undefined}
+                />
+              )}
             />
             {errors.newPassword && (
               <p className="text-xs text-destructive">
@@ -85,8 +93,8 @@ export default function PasswordForm() {
         </div>
 
         <div className="pt-2">
-          <Button type="submit" className="glow-primary" disabled={isLoading}>
-            {isLoading ? "Updating..." : "Update Password"}
+          <Button type="primary" htmlType="submit" className="glow-primary" loading={isLoading}>
+            Update Password
           </Button>
         </div>
       </form>

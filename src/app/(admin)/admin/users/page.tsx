@@ -4,36 +4,19 @@ import { useState, useMemo } from "react";
 import { useGetUsersQuery } from "@/store/users-api";
 import { IUser } from "@/types";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Button, Input, Select, Pagination } from "antd";
 import { PlusIcon, SearchIcon, Users } from "lucide-react";
 
 import { UserTable } from "@/components/users/user-table";
 import { UserFormModal } from "@/components/users/user-form-modal";
 import { useDebounce } from "@/hooks/use-debounce";
 
-const LIMIT = 10;
-
 export default function ManageUsersPage() {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("all");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<IUser | null>(null);
@@ -43,12 +26,12 @@ export default function ManageUsersPage() {
   const queryParams = useMemo(
     () => ({
       page,
-      limit: LIMIT,
+      limit,
       search: debouncedSearch || undefined,
       role: role !== "all" ? role : undefined,
       status: status !== "all" ? status : undefined,
     }),
-    [page, debouncedSearch, role, status]
+    [page, limit, debouncedSearch, role, status]
   );
 
   const { data, isLoading } = useGetUsersQuery(queryParams);
@@ -72,13 +55,13 @@ export default function ManageUsersPage() {
     setPage(1);
   };
 
-  const handleRoleChange = (value: string | null) => {
-    setRole(value ?? "all");
+  const handleRoleChange = (value: string) => {
+    setRole(value);
     setPage(1);
   };
 
-  const handleStatusChange = (value: string | null) => {
-    setStatus(value ?? "all");
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
     setPage(1);
   };
 
@@ -95,44 +78,55 @@ export default function ManageUsersPage() {
             Manage foundation members and administrators
           </p>
         </div>
-        <Button onClick={handleAddUser} className="glow-primary gap-2">
-          <PlusIcon className="h-4 w-4" />
+        <Button 
+          type="primary" 
+          onClick={handleAddUser} 
+          className="glow-primary" 
+          icon={<PlusIcon className="h-4 w-4" />}
+        >
           Add User
         </Button>
       </div>
 
       {/* Filters Card */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="glass-card rounded-xl p-4 lg:p-6 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">Search Users</label>
             <Input
               placeholder="Search by name, username, or email..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 bg-white/50"
+              prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
+              className="bg-white/50 w-full"
             />
           </div>
-          <Select value={role} onValueChange={handleRoleChange}>
-            <SelectTrigger className="w-full sm:w-36 bg-white/50">
-              <SelectValue placeholder="Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="user">User</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-full sm:w-40 bg-white/50">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="disabled">Disabled</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">Filter by Role</label>
+            <Select
+              className="w-full bg-white/50"
+              value={role}
+              onChange={handleRoleChange}
+              options={[
+                { label: "All Roles", value: "all" },
+                { label: "Admin", value: "admin" },
+                { label: "User", value: "user" },
+              ]}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-muted-foreground">Filter by Status</label>
+            <Select
+              className="w-full bg-white/50"
+              value={status}
+              onChange={handleStatusChange}
+              options={[
+                { label: "All Status", value: "all" },
+                { label: "Active", value: "active" },
+                { label: "Disabled", value: "disabled" },
+              ]}
+            />
+          </div>
         </div>
       </div>
 
@@ -149,59 +143,24 @@ export default function ManageUsersPage() {
             isLoading={isLoading}
             onEdit={handleEditUser}
             page={page}
-            limit={LIMIT}
+            limit={limit}
           />
         </div>
         {/* Pagination inside the card */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-white/20">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    aria-disabled={page <= 1}
-                    className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => {
-                    if (totalPages <= 5) return true;
-                    if (p === 1 || p === totalPages) return true;
-                    return Math.abs(p - page) <= 1;
-                  })
-                  .map((p, idx, arr) => {
-                    const showEllipsisBefore = idx > 0 && p - arr[idx - 1] > 1;
-                    return (
-                      <span key={p} className="contents">
-                        {showEllipsisBefore && (
-                          <PaginationItem>
-                            <span className="flex size-8 items-center justify-center text-muted-foreground">
-                              ...
-                            </span>
-                          </PaginationItem>
-                        )}
-                        <PaginationItem>
-                          <PaginationLink
-                            isActive={page === p}
-                            onClick={() => setPage(p)}
-                            className="cursor-pointer"
-                          >
-                            {p}
-                          </PaginationLink>
-                        </PaginationItem>
-                      </span>
-                    );
-                  })}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    aria-disabled={page >= totalPages}
-                    className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+        {(pagination?.total ?? 0) > 0 && (
+          <div className="p-4 border-t border-white/20 flex justify-center">
+            <Pagination
+              current={page}
+              total={pagination?.total ?? 0}
+              pageSize={limit}
+              onChange={(p) => setPage(p)}
+              showSizeChanger={true}
+              onShowSizeChange={(current, size) => {
+                setLimit(size);
+                setPage(1);
+              }}
+              pageSizeOptions={['10', '20', '50', '100']}
+            />
           </div>
         )}
       </div>

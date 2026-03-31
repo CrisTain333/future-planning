@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -14,16 +14,7 @@ import {
 } from "@/validations/user";
 import { IUser } from "@/types";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Button, Input, Select } from "antd";
 import { Camera } from "lucide-react";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"] as const;
@@ -48,7 +39,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     useUploadProfilePictureMutation();
 
   const {
-    register,
+    control,
     handleSubmit,
     setValue,
     watch,
@@ -144,14 +135,12 @@ export default function ProfileForm({ user }: ProfileFormProps) {
           onChange={handleFileChange}
         />
         <Button
-          type="button"
-          variant="outline"
-          size="sm"
+          htmlType="button"
           onClick={handlePhotoClick}
-          disabled={isUploading}
+          loading={isUploading}
         >
           <Camera className="h-4 w-4 mr-2" />
-          {isUploading ? "Uploading..." : "Change Photo"}
+          Change Photo
         </Button>
       </div>
 
@@ -159,16 +148,36 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input id="fullName" {...register("fullName")} className="bg-white/50" />
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="fullName">Full Name</label>
+            <Controller
+              name="fullName"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  {...field}
+                  id="fullName" 
+                  status={errors.fullName ? "error" : undefined}
+                />
+              )}
+            />
             {errors.fullName && (
               <p className="text-xs text-destructive">{errors.fullName.message}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" {...register("username")} className="bg-white/50" />
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="username">Username</label>
+            <Controller
+              name="username"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  {...field}
+                  id="username" 
+                  status={errors.username ? "error" : undefined}
+                />
+              )}
+            />
             {errors.username && (
               <p className="text-xs text-destructive">{errors.username.message}</p>
             )}
@@ -177,16 +186,37 @@ export default function ProfileForm({ user }: ProfileFormProps) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" {...register("email")} className="bg-white/50" />
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">Email</label>
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  {...field}
+                  id="email" 
+                  type="email" 
+                  status={errors.email ? "error" : undefined}
+                />
+              )}
+            />
             {errors.email && (
               <p className="text-xs text-destructive">{errors.email.message}</p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" {...register("phone")} className="bg-white/50" />
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="phone">Phone</label>
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  {...field}
+                  id="phone" 
+                  status={errors.phone ? "error" : undefined}
+                />
+              )}
+            />
             {errors.phone && (
               <p className="text-xs text-destructive">{errors.phone.message}</p>
             )}
@@ -194,36 +224,38 @@ export default function ProfileForm({ user }: ProfileFormProps) {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="address">Address</Label>
-          <Input id="address" {...register("address")} className="bg-white/50" />
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="address">Address</label>
+          <Controller
+            name="address"
+            control={control}
+            render={({ field }) => (
+              <Input 
+                {...field}
+                id="address" 
+                status={errors.address ? "error" : undefined}
+              />
+            )}
+          />
           {errors.address && (
             <p className="text-xs text-destructive">{errors.address.message}</p>
           )}
         </div>
 
         <div className="space-y-1.5">
-          <Label>Blood Group</Label>
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Blood Group</label>
           <Select
-            value={bloodGroupValue ?? ""}
-            onValueChange={(val: string | null) =>
+            className="w-full"
+            value={bloodGroupValue || undefined}
+            onChange={(val: string) =>
               setValue(
                 "bloodGroup",
-                (val || undefined) as UpdateProfileInput["bloodGroup"],
+                val as UpdateProfileInput["bloodGroup"],
                 { shouldValidate: true }
               )
             }
-          >
-            <SelectTrigger className="w-full bg-white/50">
-              <SelectValue placeholder="Select blood group" />
-            </SelectTrigger>
-            <SelectContent>
-              {BLOOD_GROUPS.map((bg) => (
-                <SelectItem key={bg} value={bg}>
-                  {bg}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Select blood group"
+            options={BLOOD_GROUPS.map((bg) => ({ label: bg, value: bg }))}
+          />
           {errors.bloodGroup && (
             <p className="text-xs text-destructive">
               {errors.bloodGroup.message}
@@ -232,8 +264,8 @@ export default function ProfileForm({ user }: ProfileFormProps) {
         </div>
 
         <div className="pt-2">
-          <Button type="submit" className="glow-primary" disabled={isUpdating}>
-            {isUpdating ? "Saving..." : "Save Changes"}
+          <Button type="primary" htmlType="submit" className="glow-primary" loading={isUpdating}>
+            Save Changes
           </Button>
         </div>
       </form>

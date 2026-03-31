@@ -9,26 +9,7 @@ import {
 import { useGetUsersQuery } from "@/store/users-api";
 import { useGetSettingsQuery } from "@/store/settings-api";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { Modal, Select, Input, Button } from "antd";
 
 const MONTH_OPTIONS = [
   { value: 1, label: "January" },
@@ -149,156 +130,141 @@ export function PaymentFormModal({
   const isSubmitting = isCreating || isUpdating;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Payment" : "Record Payment"}</DialogTitle>
-          <DialogDescription>
+    <Modal
+      open={open}
+      onCancel={() => onOpenChange(false)}
+      title={
+        <div>
+          <h2 className="text-lg font-semibold">{isEdit ? "Edit Payment" : "Record Payment"}</h2>
+          <p className="text-sm font-normal text-muted-foreground mt-1">
             {isEdit
               ? "Update the payment details below."
               : "Fill in the details to record a new payment."}
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
+      }
+      footer={null}
+      destroyOnClose
+    >
+      <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        {/* Member select */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="member">Member</label>
+          {isEdit ? (
+            <Input
+              value={
+                typeof payment.userId === "object"
+                  ? payment.userId.fullName
+                  : payment.userId
+              }
+              disabled
+            />
+          ) : (
+            <Select
+              className="w-full"
+              value={userId || undefined}
+              onChange={(val: string) => setUserId(val)}
+              placeholder="Select a member"
+              options={users.map((user: IUser) => ({
+                label: user.fullName,
+                value: user._id,
+              }))}
+            />
+          )}
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Member select */}
+        {/* Month & Year */}
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="member">Member</Label>
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="month">Month</label>
             {isEdit ? (
               <Input
-                value={
-                  typeof payment.userId === "object"
-                    ? payment.userId.fullName
-                    : payment.userId
-                }
+                value={MONTH_OPTIONS[payment.month - 1]?.label}
                 disabled
               />
             ) : (
               <Select
-                value={userId}
-                onValueChange={(val) => setUserId(val as string)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a member" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((user: IUser) => (
-                    <SelectItem key={user._id} value={user._id}>
-                      {user.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="w-full"
+                value={month}
+                onChange={(val: number) => setMonth(val)}
+                placeholder="Month"
+                options={MONTH_OPTIONS}
+              />
             )}
           </div>
-
-          {/* Month & Year */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="month">Month</Label>
-              {isEdit ? (
-                <Input
-                  value={MONTH_OPTIONS[payment.month - 1]?.label}
-                  disabled
-                />
-              ) : (
-                <Select
-                  value={month}
-                  onValueChange={(val) => setMonth(val as number)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTH_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="year">Year</Label>
-              <Input
-                id="year"
-                type="number"
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-                disabled={isEdit}
-                min={2020}
-                max={2100}
-              />
-            </div>
-          </div>
-
-          {/* Amount */}
           <div className="space-y-1.5">
-            <Label htmlFor="amount">Amount (BDT)</Label>
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="year">Year</label>
             <Input
-              id="amount"
+              id="year"
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              min={0}
-              required
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              disabled={isEdit}
+              min={2020}
+              max={2100}
             />
           </div>
+        </div>
 
-          {/* Penalty */}
+        {/* Amount */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="amount">Amount (BDT)</label>
+          <Input
+            id="amount"
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            min={0}
+            required
+          />
+        </div>
+
+        {/* Penalty */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="penalty">Penalty (BDT)</label>
+          <Input
+            id="penalty"
+            type="number"
+            value={penalty}
+            onChange={(e) => setPenalty(Number(e.target.value))}
+            min={0}
+          />
+        </div>
+
+        {/* Penalty reason - only visible when penalty > 0 */}
+        {penalty > 0 && (
           <div className="space-y-1.5">
-            <Label htmlFor="penalty">Penalty (BDT)</Label>
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="penaltyReason">Penalty Reason</label>
             <Input
-              id="penalty"
-              type="number"
-              value={penalty}
-              onChange={(e) => setPenalty(Number(e.target.value))}
-              min={0}
+              id="penaltyReason"
+              value={penaltyReason}
+              onChange={(e) => setPenaltyReason(e.target.value)}
+              placeholder="Reason for penalty"
             />
           </div>
+        )}
 
-          {/* Penalty reason - only visible when penalty > 0 */}
-          {penalty > 0 && (
-            <div className="space-y-1.5">
-              <Label htmlFor="penaltyReason">Penalty Reason</Label>
-              <Input
-                id="penaltyReason"
-                value={penaltyReason}
-                onChange={(e) => setPenaltyReason(e.target.value)}
-                placeholder="Reason for penalty"
-              />
-            </div>
-          )}
+        {/* Note */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="note">Note</label>
+          <Input.TextArea
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Optional note"
+            rows={2}
+          />
+        </div>
 
-          {/* Note */}
-          <div className="space-y-1.5">
-            <Label htmlFor="note">Note</Label>
-            <Textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Optional note"
-              rows={2}
-            />
-          </div>
-
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>
-              Cancel
-            </DialogClose>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? isEdit
-                  ? "Updating..."
-                  : "Recording..."
-                : isEdit
-                  ? "Update Payment"
-                  : "Record Payment"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button htmlType="button" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
+            {isEdit ? "Update Payment" : "Record Payment"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

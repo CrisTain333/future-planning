@@ -3,13 +3,8 @@
 import { useSession, signOut } from "next-auth/react";
 import { LogOut, UserCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Dropdown } from "antd";
+import type { MenuProps } from "antd";
 import { MobileSidebar } from "./sidebar";
 import { NotificationBell } from "./notification-bell";
 import Link from "next/link";
@@ -24,6 +19,37 @@ export function Header() {
     .toUpperCase()
     .slice(0, 2);
 
+  const items: MenuProps['items'] = [
+    {
+      key: 'info',
+      label: (
+        <div className="px-1 py-0.5">
+          <p className="text-sm font-medium m-0">{fullName}</p>
+          <p className="text-xs text-muted-foreground capitalize m-0">
+            {(session?.user as { role?: string })?.role}
+          </p>
+        </div>
+      ),
+      disabled: true,
+      className: "!cursor-default",
+    },
+    { type: 'divider' },
+    {
+      key: 'profile',
+      label: 'Profile',
+      icon: <UserCircle className="h-4 w-4" />,
+      onClick: () => (window.location.href = "/profile"),
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      label: 'Log out',
+      icon: <LogOut className="h-4 w-4" />,
+      danger: true,
+      onClick: () => signOut({ callbackUrl: "/login" }),
+    },
+  ];
+
   return (
     <header className="sticky top-0 z-50 flex h-14 items-center gap-4 glass-header px-4 md:px-6">
       <MobileSidebar />
@@ -35,36 +61,15 @@ export function Header() {
       <div className="flex items-center gap-2">
         <NotificationBell />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger className="relative h-8 w-8 rounded-full cursor-pointer">
+        <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" overlayClassName="w-56">
+          <div className="relative h-8 w-8 rounded-full cursor-pointer">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {initials}
               </AvatarFallback>
             </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="px-2 py-1.5">
-              <p className="text-sm font-medium">{fullName}</p>
-              <p className="text-xs text-muted-foreground capitalize">
-                {(session?.user as { role?: string })?.role}
-              </p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = "/profile"}>
-              <UserCircle className="mr-2 h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="cursor-pointer text-destructive"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </div>
+        </Dropdown>
       </div>
     </header>
   );

@@ -4,24 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useDeleteNoticeMutation } from "@/store/notices-api";
 import { INotice, IUser } from "@/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
+import type { TableProps } from "antd";
+import { Table, Modal, Button } from "antd";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -87,49 +71,62 @@ export function NoticeTable({
     );
   }
 
+  const columns: TableProps<INotice>['columns'] = [
+    {
+      title: '#',
+      key: 'index',
+      width: 48,
+      render: (_, __, index) => (page - 1) * limit + index + 1,
+    },
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      className: "font-medium",
+    },
+    {
+      title: 'Created By',
+      key: 'createdBy',
+      render: (_, record) => getCreatorName(record.createdBy),
+    },
+    {
+      title: 'Date',
+      key: 'createdAt',
+      render: (_, record) => formatDate(record.createdAt),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right',
+      width: 96,
+      render: (_, record) => (
+        <div className="flex justify-end gap-1">
+          <Button
+            type="text"
+            icon={<Pencil className="h-4 w-4" />}
+            onClick={() => onEdit(record)}
+          />
+          <Button
+            type="text"
+            danger
+            icon={<Trash2 className="h-4 w-4" />}
+            onClick={() => setDeleteId(record._id)}
+          />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
       {/* Desktop table */}
       <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">#</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {notices.map((notice, index) => (
-              <TableRow key={notice._id}>
-                <TableCell>{(page - 1) * limit + index + 1}</TableCell>
-                <TableCell className="font-medium">{notice.title}</TableCell>
-                <TableCell>{getCreatorName(notice.createdBy)}</TableCell>
-                <TableCell>{formatDate(notice.createdAt)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => onEdit(notice)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => setDeleteId(notice._id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Table
+          columns={columns}
+          dataSource={notices}
+          rowKey="_id"
+          pagination={false}
+        />
       </div>
 
       {/* Mobile card layout */}
@@ -151,19 +148,16 @@ export function NoticeTable({
               </div>
               <div className="flex gap-1 ml-2 shrink-0">
                 <Button
-                  variant="ghost"
-                  size="icon-sm"
+                  type="text"
+                  icon={<Pencil className="h-4 w-4" />}
                   onClick={() => onEdit(notice)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                />
                 <Button
-                  variant="ghost"
-                  size="icon-sm"
+                  type="text"
+                  danger
+                  icon={<Trash2 className="h-4 w-4" />}
                   onClick={() => setDeleteId(notice._id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                />
               </div>
             </div>
           </div>
@@ -171,29 +165,27 @@ export function NoticeTable({
       </div>
 
       {/* Delete confirmation dialog */}
-      <Dialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Notice</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this notice? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>
-              Cancel
-            </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
+      <Modal
+        open={!!deleteId}
+        onCancel={() => setDeleteId(null)}
+        title={
+          <div>
+            <h2 className="text-lg font-semibold">Delete Notice</h2>
+            <p className="text-sm font-normal text-muted-foreground mt-1">
+              Are you sure you want to delete this notice? This action cannot be undone.
+            </p>
+          </div>
+        }
+        footer={
+          <div className="flex justify-end gap-2 mt-6">
+            <Button onClick={() => setDeleteId(null)}>Cancel</Button>
+            <Button danger type="primary" onClick={handleDelete} loading={isDeleting}>
+              Delete
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+        destroyOnClose
+      />
     </>
   );
 }

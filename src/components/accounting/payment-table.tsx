@@ -1,15 +1,8 @@
 "use client";
 
 import { IPayment, IUser } from "@/types";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { Table, Button } from "antd";
+import type { TableProps } from "antd";
 import { PencilIcon } from "lucide-react";
 
 const MONTH_NAMES = [
@@ -46,68 +39,75 @@ export function PaymentTable({
   const getApprovedByName = (approvedBy: string | IUser) =>
     typeof approvedBy === "object" ? approvedBy.fullName : approvedBy;
 
+  const columns: TableProps<IPayment>['columns'] = [
+    {
+      title: '#',
+      key: 'index',
+      width: 48,
+      render: (_, __, index) => (page - 1) * limit + index + 1,
+    },
+    {
+      title: 'Member Name',
+      key: 'memberName',
+      className: "font-medium",
+      render: (_, record) => getUserName(record.userId),
+    },
+    {
+      title: 'Month',
+      key: 'month',
+      render: (_, record) => `${MONTH_NAMES[record.month - 1]} ${record.year}`,
+    },
+    {
+      title: 'Amount (BDT)',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (amount) => amount.toLocaleString(),
+    },
+    {
+      title: 'Penalty',
+      key: 'penalty',
+      render: (_, record) => record.penalty > 0 ? (
+        <span className="text-destructive">
+          {record.penalty.toLocaleString()}
+        </span>
+      ) : "0",
+    },
+    {
+      title: 'Recorded By',
+      key: 'approvedBy',
+      render: (_, record) => getApprovedByName(record.approvedBy),
+    },
+    {
+      title: 'Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (dateStr) => new Date(dateStr).toLocaleDateString(),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right',
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={<PencilIcon className="h-4 w-4" />}
+          onClick={() => onEdit(record)}
+        />
+      ),
+    },
+  ];
+
   return (
     <>
       {/* Desktop table */}
       <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">#</TableHead>
-              <TableHead>Member Name</TableHead>
-              <TableHead>Month</TableHead>
-              <TableHead>Amount (BDT)</TableHead>
-              <TableHead>Penalty</TableHead>
-              <TableHead>Recorded By</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {payments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  No payments found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              payments.map((payment, index) => (
-                <TableRow key={payment._id}>
-                  <TableCell>{(page - 1) * limit + index + 1}</TableCell>
-                  <TableCell className="font-medium">
-                    {getUserName(payment.userId)}
-                  </TableCell>
-                  <TableCell>
-                    {MONTH_NAMES[payment.month - 1]} {payment.year}
-                  </TableCell>
-                  <TableCell>{payment.amount.toLocaleString()}</TableCell>
-                  <TableCell>
-                    {payment.penalty > 0 ? (
-                      <span className="text-destructive">
-                        {payment.penalty.toLocaleString()}
-                      </span>
-                    ) : (
-                      "0"
-                    )}
-                  </TableCell>
-                  <TableCell>{getApprovedByName(payment.approvedBy)}</TableCell>
-                  <TableCell>
-                    {new Date(payment.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => onEdit(payment)}
-                    >
-                      <PencilIcon />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        <Table
+          columns={columns}
+          dataSource={payments}
+          rowKey="_id"
+          pagination={false}
+          locale={{ emptyText: <span className="text-muted-foreground">No payments found.</span> }}
+        />
       </div>
 
       {/* Mobile card layout */}
@@ -128,12 +128,10 @@ export function PaymentTable({
                   {getUserName(payment.userId)}
                 </span>
                 <Button
-                  variant="ghost"
-                  size="icon-sm"
+                  type="text"
+                  icon={<PencilIcon className="h-4 w-4" />}
                   onClick={() => onEdit(payment)}
-                >
-                  <PencilIcon />
-                </Button>
+                />
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
                 <span>

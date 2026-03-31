@@ -23,15 +23,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button, Table, Pagination } from "antd";
+import type { TableProps } from "antd";
 import { StatCard } from "./stat-card";
 import {
   useGetMemberDashboardQuery,
@@ -182,14 +175,12 @@ function PaymentCardMobile({ payment, index }: { payment: PaymentItem; index: nu
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>Approved by: {typeof payment.approvedBy === "object" ? payment.approvedBy?.fullName : "—"}</span>
           <Button
-            variant="ghost"
-            size="icon-xs"
+            type="text"
+            icon={<Download className="h-3 w-3" />}
             onClick={() =>
               window.open(`/api/payments/${payment._id}/receipt`, "_blank")
             }
-          >
-            <Download className="h-3 w-3" />
-          </Button>
+          />
         </div>
       </CardContent>
     </Card>
@@ -198,7 +189,7 @@ function PaymentCardMobile({ payment, index }: { payment: PaymentItem; index: nu
 
 export default function MemberDashboard() {
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
 
   const { data: dashRes, isLoading: dashLoading } =
     useGetMemberDashboardQuery();
@@ -230,6 +221,51 @@ export default function MemberDashboard() {
       amount: entry.amount,
     })
   );
+
+  const columns: TableProps<PaymentItem>['columns'] = [
+    {
+      title: '#',
+      key: 'index',
+      width: 48,
+      render: (_, __, index) => (page - 1) * limit + index + 1,
+    },
+    {
+      title: 'Date',
+      key: 'createdAt',
+      render: (_, record) => new Date(record.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+    },
+    {
+      title: 'Month',
+      key: 'month',
+      render: (_, record) => `${MONTHS[record.month - 1]} ${record.year}`,
+    },
+    {
+      title: 'Amount (BDT)',
+      key: 'amount',
+      render: (_, record) => `৳${record.amount.toLocaleString()}`,
+    },
+    {
+      title: 'Penalty (BDT)',
+      key: 'penalty',
+      render: (_, record) => record.penalty > 0 ? `৳${record.penalty.toLocaleString()}` : "—",
+    },
+    {
+      title: 'Approved By',
+      key: 'approvedBy',
+      render: (_, record) => typeof record.approvedBy === "object" ? record.approvedBy?.fullName : "—",
+    },
+    {
+      title: 'Receipt',
+      key: 'receipt',
+      render: (_, record) => (
+        <Button
+          type="text"
+          icon={<Download className="h-3 w-3" />}
+          onClick={() => window.open(`/api/payments/${record._id}/receipt`, "_blank")}
+        />
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -296,7 +332,7 @@ export default function MemberDashboard() {
                   />
                   <Tooltip
                     formatter={(value) => [
-                      `৳${Number(value).toLocaleString()}`,
+                       `৳${Number(value).toLocaleString()}`,
                       "Payment",
                     ]}
                   />
@@ -366,62 +402,12 @@ export default function MemberDashboard() {
             <>
               {/* Desktop table */}
               <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>#</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Month</TableHead>
-                      <TableHead>Amount (BDT)</TableHead>
-                      <TableHead>Penalty (BDT)</TableHead>
-                      <TableHead>Approved By</TableHead>
-                      <TableHead>Receipt</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {payments.map((payment, idx) => (
-                      <TableRow key={payment._id}>
-                        <TableCell>
-                          {(page - 1) * limit + idx + 1}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(payment.createdAt).toLocaleDateString(
-                            "en-GB",
-                            { day: "numeric", month: "short", year: "numeric" }
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {MONTHS[payment.month - 1]} {payment.year}
-                        </TableCell>
-                        <TableCell>
-                          ৳{payment.amount.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          {payment.penalty > 0
-                            ? `৳${payment.penalty.toLocaleString()}`
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          {typeof payment.approvedBy === "object" ? payment.approvedBy?.fullName : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() =>
-                              window.open(
-                                `/api/payments/${payment._id}/receipt`,
-                                "_blank"
-                              )
-                            }
-                          >
-                            <Download className="h-3 w-3" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <Table
+                  columns={columns}
+                  dataSource={payments}
+                  rowKey="_id"
+                  pagination={false}
+                />
               </div>
 
               {/* Mobile card layout */}
@@ -436,29 +422,20 @@ export default function MemberDashboard() {
               </div>
 
               {/* Pagination */}
-              {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Page {pagination.page} of {pagination.totalPages}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= pagination.totalPages}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
+              {(pagination?.total ?? 0) > 0 && (
+                <div className="flex justify-center mt-4 border-t border-white/10 pt-4">
+                  <Pagination
+                    current={page}
+                    total={pagination?.total ?? 0}
+                    pageSize={limit}
+                    onChange={(p) => setPage(p)}
+                    showSizeChanger={true}
+                    onShowSizeChange={(current, size) => {
+                      setLimit(size);
+                      setPage(1);
+                    }}
+                    pageSizeOptions={['10', '20', '50', '100']}
+                  />
                 </div>
               )}
             </>

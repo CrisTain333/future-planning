@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
@@ -17,25 +17,7 @@ import {
   useUpdateUserMutation,
 } from "@/store/users-api";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2Icon } from "lucide-react";
+import { Modal, Button, Input, Select } from "antd";
 
 interface UserFormModalProps {
   open: boolean;
@@ -57,7 +39,7 @@ export function UserFormModal({
   const isSubmitting = isCreating || isUpdating;
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     setValue,
@@ -125,172 +107,194 @@ export function UserFormModal({
   const roleValue = watch("role");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit User" : "Add User"}</DialogTitle>
-          <DialogDescription>
+    <Modal
+      open={open}
+      onCancel={() => onOpenChange(false)}
+      title={
+        <div>
+          <h2 className="text-lg font-semibold">{isEditMode ? "Edit User" : "Add User"}</h2>
+          <p className="text-sm font-normal text-muted-foreground mt-1">
             {isEditMode
               ? "Update the user details below."
               : "Fill in the details to create a new user."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* Full Name */}
-            <div className="space-y-1.5">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                placeholder="John Doe"
-                aria-invalid={!!errors.fullName}
-                {...register("fullName")}
-              />
-              {errors.fullName && (
-                <p className="text-xs text-destructive">
-                  {errors.fullName.message}
-                </p>
-              )}
-            </div>
-
-            {/* Username */}
-            <div className="space-y-1.5">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                placeholder="johndoe"
-                aria-invalid={!!errors.username}
-                {...register("username")}
-              />
-              {errors.username && (
-                <p className="text-xs text-destructive">
-                  {errors.username.message}
-                </p>
-              )}
-            </div>
-
-            {/* Password (create only) */}
-            {!isEditMode && (
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+          </p>
+        </div>
+      }
+      footer={null}
+      destroyOnClose
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Full Name */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="fullName">Full Name</label>
+            <Controller
+              name="fullName"
+              control={control}
+              render={({ field }) => (
                 <Input
-                  id="password"
-                  type="password"
-                  placeholder="Min 4 characters"
-                  aria-invalid={!!(errors as { password?: { message?: string } }).password}
-                  {...register("password" as "fullName")}
+                  {...field}
+                  id="fullName"
+                  placeholder="John Doe"
+                  status={errors.fullName ? "error" : undefined}
                 />
-                {(errors as { password?: { message?: string } }).password && (
-                  <p className="text-xs text-destructive">
-                    {(errors as { password?: { message?: string } }).password?.message}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Email */}
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                aria-invalid={!!errors.email}
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">
-                  {errors.email.message}
-                </p>
               )}
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                placeholder="+1234567890"
-                {...register("phone")}
-              />
-            </div>
-
-            {/* Address */}
-            <div className="space-y-1.5">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                placeholder="123 Main St"
-                {...register("address")}
-              />
-            </div>
-
-            {/* Blood Group */}
-            <div className="space-y-1.5">
-              <Label>Blood Group</Label>
-              <Select
-                value={bloodGroupValue || ""}
-                onValueChange={(val: string | null) =>
-                  setValue(
-                    "bloodGroup",
-                    (val || undefined) as CreateUserInput["bloodGroup"],
-                    { shouldValidate: true }
-                  )
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select blood group" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BLOOD_GROUPS.map((bg) => (
-                    <SelectItem key={bg} value={bg}>
-                      {bg}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Role */}
-            <div className="space-y-1.5">
-              <Label>Role</Label>
-              <Select
-                value={roleValue || "user"}
-                onValueChange={(val: string | null) =>
-                  setValue("role", (val ?? "user") as "admin" | "user", {
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            />
+            {errors.fullName && (
+              <p className="text-xs text-destructive">
+                {errors.fullName.message}
+              </p>
+            )}
           </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && (
-                <Loader2Icon className="animate-spin" data-icon="inline-start" />
+          {/* Username */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="username">Username</label>
+            <Controller
+              name="username"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="username"
+                  placeholder="johndoe"
+                  status={errors.username ? "error" : undefined}
+                />
               )}
-              {isEditMode ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            />
+            {errors.username && (
+              <p className="text-xs text-destructive">
+                {errors.username.message}
+              </p>
+            )}
+          </div>
+
+          {/* Password (create only) */}
+          {!isEditMode && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">Password</label>
+              <Controller
+                name="password"
+                control={control as any}
+                render={({ field }) => (
+                  <Input.Password
+                    {...field}
+                    id="password"
+                    placeholder="Min 4 characters"
+                    status={(errors as { password?: { message?: string } }).password ? "error" : undefined}
+                  />
+                )}
+              />
+              {(errors as { password?: { message?: string } }).password && (
+                <p className="text-xs text-destructive">
+                  {(errors as { password?: { message?: string } }).password?.message}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">Email</label>
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  status={errors.email ? "error" : undefined}
+                />
+              )}
+            />
+            {errors.email && (
+              <p className="text-xs text-destructive">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {/* Phone */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="phone">Phone</label>
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="phone"
+                  placeholder="+1234567890"
+                />
+              )}
+            />
+          </div>
+
+          {/* Address */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="address">Address</label>
+            <Controller
+              name="address"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="address"
+                  placeholder="123 Main St"
+                />
+              )}
+            />
+          </div>
+
+          {/* Blood Group */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Blood Group</label>
+            <Select
+              className="w-full"
+              value={bloodGroupValue || undefined}
+              onChange={(val: string) =>
+                setValue(
+                  "bloodGroup",
+                  val as CreateUserInput["bloodGroup"],
+                  { shouldValidate: true }
+                )
+              }
+              placeholder="Select blood group"
+              options={BLOOD_GROUPS.map((bg) => ({ label: bg, value: bg }))}
+            />
+          </div>
+
+          {/* Role */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Role</label>
+            <Select
+              className="w-full"
+              value={roleValue || "user"}
+              onChange={(val: string) =>
+                setValue("role", val as "admin" | "user", {
+                  shouldValidate: true,
+                })
+              }
+              placeholder="Select role"
+              options={[
+                { label: "User", value: "user" },
+                { label: "Admin", value: "admin" },
+              ]}
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
+          <Button htmlType="button" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
+            {isEditMode ? "Update" : "Create"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

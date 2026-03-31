@@ -4,29 +4,8 @@ import { useState } from "react";
 import { useGetAuditLogsQuery } from "@/store/audit-logs-api";
 import { useGetUsersQuery } from "@/store/users-api";
 import { IUser } from "@/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
+import { Table, Select, Pagination } from "antd";
+import type { TableProps } from "antd";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileX2, ScrollText } from "lucide-react";
 
@@ -48,8 +27,6 @@ const ACTION_OPTIONS = Object.entries(ACTION_LABELS).map(([value, label]) => ({
   value,
   label,
 }));
-
-const LIMIT = 15;
 
 interface AuditLogEntry {
   _id: string;
@@ -94,45 +71,9 @@ function FormattedDetails({ details }: { details: Record<string, unknown> }) {
   );
 }
 
-function TableSkeleton() {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Action</TableHead>
-          <TableHead>Performed By</TableHead>
-          <TableHead>Target User</TableHead>
-          <TableHead>Details</TableHead>
-          <TableHead>Date</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <TableRow key={i}>
-            <TableCell>
-              <Skeleton className="h-4 w-28" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-24" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-24" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-40" />
-            </TableCell>
-            <TableCell>
-              <Skeleton className="h-4 w-32" />
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
 export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const [filterAction, setFilterAction] = useState<string>("");
   const [filterPerformedBy, setFilterPerformedBy] = useState<string>("");
 
@@ -141,7 +82,7 @@ export default function AuditLogsPage() {
 
   const { data: auditData, isLoading } = useGetAuditLogsQuery({
     page,
-    limit: LIMIT,
+    limit,
     ...(filterAction ? { action: filterAction } : {}),
     ...(filterPerformedBy ? { performedBy: filterPerformedBy } : {}),
   });
@@ -150,6 +91,37 @@ export default function AuditLogsPage() {
   const pagination = auditData?.pagination;
   const total = pagination?.total ?? 0;
   const totalPages = pagination?.totalPages ?? 1;
+
+  const columns: TableProps<AuditLogEntry>['columns'] = [
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => ACTION_LABELS[record.action] ?? record.action,
+      className: "font-medium",
+    },
+    {
+      title: 'Performed By',
+      key: 'performedBy',
+      render: (_, record) => typeof record.performedBy === "object" ? record.performedBy?.fullName : "Unknown",
+    },
+    {
+      title: 'Target User',
+      key: 'targetUser',
+      render: (_, record) => typeof record.targetUser === "object" && record.targetUser ? record.targetUser.fullName : "—",
+    },
+    {
+      title: 'Details',
+      key: 'details',
+      className: "max-w-xs",
+      render: (_, record) => <FormattedDetails details={record.details} />,
+    },
+    {
+      title: 'Date',
+      key: 'createdAt',
+      className: "text-muted-foreground",
+      render: (_, record) => formatDate(record.createdAt),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -165,52 +137,40 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Filters Card */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="glass-card rounded-xl p-4 lg:p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Action</span>
+            <label className="text-sm font-medium text-muted-foreground">Filter by Action</label>
             <Select
+              className="w-full bg-white/50"
               value={filterAction || undefined}
-              onValueChange={(val) => {
+              onChange={(val) => {
                 setFilterAction(val as string);
                 setPage(1);
               }}
-            >
-              <SelectTrigger className="w-full sm:w-48 bg-white/50">
-                <SelectValue placeholder="All actions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All actions</SelectItem>
-                {ACTION_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="All actions"
+              options={[
+                { label: "All actions", value: "" },
+                ...ACTION_OPTIONS
+              ]}
+            />
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Performed By</span>
+            <label className="text-sm font-medium text-muted-foreground">Filter by Performed By</label>
             <Select
+              className="w-full bg-white/50"
               value={filterPerformedBy || undefined}
-              onValueChange={(val) => {
+              onChange={(val) => {
                 setFilterPerformedBy(val as string);
                 setPage(1);
               }}
-            >
-              <SelectTrigger className="w-full sm:w-48 bg-white/50">
-                <SelectValue placeholder="All users" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All users</SelectItem>
-                {users.map((user: IUser) => (
-                  <SelectItem key={user._id} value={user._id}>
-                    {user.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="All users"
+              options={[
+                { label: "All users", value: "" },
+                ...users.map((user: IUser) => ({ label: user.fullName, value: user._id }))
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -223,91 +183,36 @@ export default function AuditLogsPage() {
           </h2>
         </div>
         <div className="overflow-x-auto p-0">
-          {isLoading ? (
-            <TableSkeleton />
-          ) : logs.length === 0 ? (
+          {logs.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
               <FileX2 className="h-10 w-10" />
               <p className="text-sm">No audit logs found.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Performed By</TableHead>
-                  <TableHead>Target User</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {logs.map((log) => (
-                  <TableRow key={log._id}>
-                    <TableCell className="font-medium">
-                      {ACTION_LABELS[log.action] ?? log.action}
-                    </TableCell>
-                    <TableCell>
-                      {typeof log.performedBy === "object" ? log.performedBy?.fullName : "Unknown"}
-                    </TableCell>
-                    <TableCell>
-                      {typeof log.targetUser === "object" && log.targetUser ? log.targetUser.fullName : "—"}
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <FormattedDetails details={log.details} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDate(log.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Table
+              columns={columns}
+              dataSource={logs}
+              rowKey="_id"
+              loading={isLoading}
+              pagination={false}
+              locale={{ emptyText: <></> }}
+            />
           )}
         </div>
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-white/20">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    aria-disabled={page <= 1}
-                    className={
-                      page <= 1
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (p) => (
-                    <PaginationItem key={p}>
-                      <PaginationLink
-                        isActive={p === page}
-                        onClick={() => setPage(p)}
-                        className="cursor-pointer"
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      setPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    aria-disabled={page >= totalPages}
-                    className={
-                      page >= totalPages
-                        ? "pointer-events-none opacity-50"
-                        : "cursor-pointer"
-                    }
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+        {total > 0 && (
+          <div className="p-4 border-t border-white/20 flex justify-center">
+            <Pagination
+              current={page}
+              total={total}
+              pageSize={limit}
+              onChange={(p) => setPage(p)}
+              showSizeChanger={true}
+              onShowSizeChange={(current, size) => {
+                setLimit(size);
+                setPage(1);
+              }}
+              pageSizeOptions={['10', '15', '20', '50', '100']}
+            />
           </div>
         )}
       </div>

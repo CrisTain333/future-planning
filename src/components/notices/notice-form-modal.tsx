@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -13,19 +13,7 @@ import {
   type CreateNoticeInput,
 } from "@/validations/notice";
 import { INotice } from "@/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Modal, Button, Input } from "antd";
 
 interface NoticeFormModalProps {
   open: boolean;
@@ -41,7 +29,7 @@ export function NoticeFormModal({
   const isEdit = !!notice;
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -82,50 +70,69 @@ export function NoticeFormModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Notice" : "New Notice"}</DialogTitle>
-          <DialogDescription>
+    <Modal
+      open={open}
+      onCancel={() => onOpenChange(false)}
+      title={
+        <div>
+          <h2 className="text-lg font-semibold">{isEdit ? "Edit Notice" : "New Notice"}</h2>
+          <p className="text-sm font-normal text-muted-foreground mt-1">
             {isEdit
               ? "Update the notice details below."
               : "Fill in the details to create a new notice."}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              placeholder="Notice title"
-              {...register("title")}
-              aria-invalid={!!errors.title}
-            />
-            {errors.title && (
-              <p className="text-sm text-destructive">{errors.title.message}</p>
+          </p>
+        </div>
+      }
+      footer={null}
+      destroyOnClose
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="title">Title</label>
+          <Controller
+            name="title"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                id="title"
+                placeholder="Notice title"
+                status={errors.title ? "error" : undefined}
+              />
             )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="body">Body</Label>
-            <Textarea
-              id="body"
-              placeholder="Notice body"
-              rows={5}
-              {...register("body")}
-              aria-invalid={!!errors.body}
-            />
-            {errors.body && (
-              <p className="text-sm text-destructive">{errors.body.message}</p>
+          />
+          {errors.title && (
+            <p className="text-sm text-destructive">{errors.title.message}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="body">Body</label>
+          <Controller
+            name="body"
+            control={control}
+            render={({ field }) => (
+              <Input.TextArea
+                {...field}
+                id="body"
+                placeholder="Notice body"
+                rows={5}
+                status={errors.body ? "error" : undefined}
+              />
             )}
-          </div>
-          <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEdit ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          />
+          {errors.body && (
+            <p className="text-sm text-destructive">{errors.body.message}</p>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button htmlType="button" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
+            {isEdit ? "Update" : "Create"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

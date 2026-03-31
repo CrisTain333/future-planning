@@ -1,13 +1,8 @@
 "use client";
 
 import { Bell, CheckCheck } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Dropdown } from "antd";
+import type { MenuProps } from "antd";
 import {
   useGetUnreadCountQuery,
   useGetNotificationsQuery,
@@ -67,9 +62,67 @@ export function NotificationBell() {
     }
   };
 
+  const items: MenuProps['items'] = [
+    {
+      key: 'title',
+      label: <div className="font-semibold text-sm">Notifications</div>,
+      disabled: true,
+      className: "!cursor-default",
+    },
+    { type: 'divider' },
+    ...(notifications.length === 0
+      ? [
+          {
+            key: 'empty',
+            label: (
+              <div className="text-center text-sm text-muted-foreground py-4">
+                No notifications
+              </div>
+            ),
+            disabled: true,
+            className: "!cursor-default",
+          },
+        ]
+      : notifications.map((n) => ({
+          key: n._id,
+          label: (
+            <div className="flex flex-col items-start gap-1 w-full max-w-[280px]">
+              <div className="flex w-full items-start justify-between gap-2">
+                <span className="font-medium text-sm leading-tight text-wrap">
+                  {n.title}
+                </span>
+                <span className="shrink-0 text-[11px] text-muted-foreground">
+                  {timeAgo(n.createdAt)}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed text-wrap">
+                {n.message}
+              </p>
+            </div>
+          ),
+          onClick: () => handleNotificationClick(n),
+          className: !n.isRead ? "bg-accent/50" : "",
+        }))),
+    ...(hasUnread
+      ? [
+          { type: 'divider' as const },
+          {
+            key: 'mark-read',
+            label: (
+              <div className="flex items-center justify-center gap-1.5 text-primary">
+                <CheckCheck className="h-4 w-4" />
+                <span className="text-sm font-medium">Mark all as read</span>
+              </div>
+            ),
+            onClick: handleMarkAllRead,
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
+    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" overlayClassName="w-80">
+      <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
         <Bell className="h-5 w-5" />
         {hasUnread && (
           <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
@@ -77,52 +130,7 @@ export function NotificationBell() {
           </span>
         )}
         <span className="sr-only">Notifications</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <div className="px-3 py-2 font-semibold text-sm">Notifications</div>
-        <DropdownMenuSeparator />
-        {notifications.length === 0 ? (
-          <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-            No notifications
-          </div>
-        ) : (
-          <>
-            {notifications.map((notification) => (
-              <DropdownMenuItem
-                key={notification._id}
-                className={`flex flex-col items-start gap-1 px-3 py-2 cursor-pointer ${
-                  !notification.isRead ? "bg-accent/50" : ""
-                }`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                <div className="flex w-full items-start justify-between gap-2">
-                  <span className="font-medium text-sm leading-tight">
-                    {notification.title}
-                  </span>
-                  <span className="shrink-0 text-[11px] text-muted-foreground">
-                    {timeAgo(notification.createdAt)}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                  {notification.message}
-                </p>
-              </DropdownMenuItem>
-            ))}
-            {hasUnread && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="flex items-center justify-center gap-1.5 py-2 cursor-pointer text-primary"
-                  onClick={handleMarkAllRead}
-                >
-                  <CheckCheck className="h-4 w-4" />
-                  <span className="text-sm font-medium">Mark all as read</span>
-                </DropdownMenuItem>
-              </>
-            )}
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </div>
+    </Dropdown>
   );
 }

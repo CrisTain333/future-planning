@@ -1,16 +1,9 @@
 "use client";
 
 import { IUser } from "@/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, Button } from "antd";
+import type { TableProps } from "antd";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PencilIcon, ToggleLeftIcon, ToggleRightIcon } from "lucide-react";
 import { useToggleUserStatusMutation } from "@/store/users-api";
@@ -49,6 +42,91 @@ export function UserTable({
     }
   };
 
+  const columns: TableProps<IUser>['columns'] = [
+    {
+      title: '#',
+      key: 'index',
+      width: 48,
+      render: (_, __, index) => (page - 1) * limit + index + 1,
+      className: "text-muted-foreground",
+    },
+    {
+      title: 'Name',
+      dataIndex: 'fullName',
+      key: 'fullName',
+      className: "font-medium",
+    },
+    {
+      title: 'Username',
+      dataIndex: 'username',
+      key: 'username',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      render: (email) => email || "-",
+    },
+    {
+      title: 'Phone',
+      dataIndex: 'phone',
+      key: 'phone',
+      render: (phone) => phone || "-",
+    },
+    {
+      title: 'Role',
+      dataIndex: 'role',
+      key: 'role',
+      render: (role) => (
+        <Badge variant={role === "admin" ? "default" : "secondary"}>
+          {role}
+        </Badge>
+      ),
+    },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (_, record) => (
+        <Badge
+          variant={record.isDisabled ? "destructive" : "outline"}
+          className={
+            !record.isDisabled
+              ? "border-green-500/50 text-green-600 dark:text-green-400"
+              : ""
+          }
+        >
+          {record.isDisabled ? "Disabled" : "Active"}
+        </Badge>
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right',
+      render: (_, record) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            type="text"
+            icon={<PencilIcon className="h-4 w-4" />}
+            onClick={() => onEdit(record)}
+          />
+          <Button
+            type="text"
+            loading={isToggling}
+            icon={
+              record.isDisabled ? (
+                <ToggleLeftIcon className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ToggleRightIcon className="h-4 w-4 text-green-600" />
+              )
+            }
+            onClick={() => handleToggleStatus(record)}
+          />
+        </div>
+      ),
+    },
+  ];
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -71,77 +149,12 @@ export function UserTable({
     <>
       {/* Desktop table */}
       <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">#</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user, index) => (
-              <TableRow key={user._id}>
-                <TableCell className="text-muted-foreground">
-                  {(page - 1) * limit + index + 1}
-                </TableCell>
-                <TableCell className="font-medium">{user.fullName}</TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email || "-"}</TableCell>
-                <TableCell>{user.phone || "-"}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={user.role === "admin" ? "default" : "secondary"}
-                  >
-                    {user.role}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={user.isDisabled ? "destructive" : "outline"}
-                    className={
-                      !user.isDisabled
-                        ? "border-green-500/50 text-green-600 dark:text-green-400"
-                        : ""
-                    }
-                  >
-                    {user.isDisabled ? "Disabled" : "Active"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => onEdit(user)}
-                    >
-                      <PencilIcon />
-                      <span className="sr-only">Edit</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => handleToggleStatus(user)}
-                      disabled={isToggling}
-                    >
-                      {user.isDisabled ? (
-                        <ToggleLeftIcon className="text-muted-foreground" />
-                      ) : (
-                        <ToggleRightIcon className="text-green-600" />
-                      )}
-                      <span className="sr-only">Toggle status</span>
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Table
+          columns={columns}
+          dataSource={users}
+          rowKey="_id"
+          pagination={false}
+        />
       </div>
 
       {/* Mobile card layout */}
@@ -162,24 +175,22 @@ export function UserTable({
               </div>
               <div className="flex items-center gap-1">
                 <Button
-                  variant="ghost"
-                  size="icon-sm"
+                  type="text"
+                  icon={<PencilIcon className="h-4 w-4" />}
                   onClick={() => onEdit(user)}
-                >
-                  <PencilIcon />
-                </Button>
+                />
                 <Button
-                  variant="ghost"
-                  size="icon-sm"
+                  type="text"
+                  loading={isToggling}
+                  icon={
+                    user.isDisabled ? (
+                      <ToggleLeftIcon className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ToggleRightIcon className="h-4 w-4 text-green-600" />
+                    )
+                  }
                   onClick={() => handleToggleStatus(user)}
-                  disabled={isToggling}
-                >
-                  {user.isDisabled ? (
-                    <ToggleLeftIcon className="text-muted-foreground" />
-                  ) : (
-                    <ToggleRightIcon className="text-green-600" />
-                  )}
-                </Button>
+                />
               </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">

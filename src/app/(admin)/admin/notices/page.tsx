@@ -3,27 +3,18 @@
 import { useState } from "react";
 import { useGetNoticesQuery } from "@/store/notices-api";
 import { INotice } from "@/types";
-import { Button } from "@/components/ui/button";
+import { Button, Pagination } from "antd";
 import { NoticeTable } from "@/components/notices/notice-table";
 import { NoticeFormModal } from "@/components/notices/notice-form-modal";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { Megaphone, Plus as PlusIcon } from "lucide-react";
-
-const LIMIT = 10;
 
 export default function NoticesPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNotice, setEditingNotice] = useState<INotice | undefined>();
 
-  const { data, isLoading } = useGetNoticesQuery({ page, limit: LIMIT });
+  const { data, isLoading } = useGetNoticesQuery({ page, limit });
   const notices = data?.data ?? [];
   const pagination = data?.pagination;
   const total = pagination?.total ?? 0;
@@ -52,8 +43,7 @@ export default function NoticesPage() {
             Create and manage announcements for members
           </p>
         </div>
-        <Button onClick={handleNew} className="glow-primary gap-2">
-          <PlusIcon className="h-4 w-4" />
+        <Button onClick={handleNew} type="primary" className="glow-primary gap-2" icon={<PlusIcon className="h-4 w-4" />}>
           New Notice
         </Button>
       </div>
@@ -70,41 +60,24 @@ export default function NoticesPage() {
             notices={notices}
             isLoading={isLoading}
             page={page}
-            limit={LIMIT}
+            limit={limit}
             onEdit={handleEdit}
           />
         </div>
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-white/20">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    aria-disabled={page <= 1}
-                    className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <PaginationItem key={p}>
-                    <PaginationLink
-                      isActive={p === page}
-                      onClick={() => setPage(p)}
-                      className="cursor-pointer"
-                    >
-                      {p}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    aria-disabled={page >= totalPages}
-                    className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+        {(pagination?.total ?? 0) > 0 && (
+          <div className="p-4 border-t border-white/20 flex justify-center">
+            <Pagination
+              current={page}
+              total={total}
+              pageSize={limit}
+              onChange={(p) => setPage(p)}
+              showSizeChanger={true}
+              onShowSizeChange={(current, size) => {
+                setLimit(size);
+                setPage(1);
+              }}
+              pageSizeOptions={['10', '20', '50', '100']}
+            />
           </div>
         )}
       </div>

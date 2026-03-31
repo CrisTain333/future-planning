@@ -8,12 +8,13 @@ import {
   Users,
   Megaphone,
   Calculator,
+  BarChart3,
+  FileText,
   ScrollText,
   UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+import { Drawer, Button } from "antd";
 import { Menu } from "lucide-react";
 import { useState } from "react";
 
@@ -50,10 +51,10 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
             href={link.href}
             onClick={onClick}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              isActive
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+               isActive
+               ? "bg-primary text-primary-foreground"
+               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
             <link.icon className="h-4 w-4" />
@@ -77,15 +78,23 @@ export function MobileSidebar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger className="md:hidden inline-flex items-center justify-center rounded-md text-sm font-medium h-10 w-10 hover:bg-accent hover:text-accent-foreground">
-        <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle menu</span>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0">
-        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+    <>
+      <Button
+        type="text"
+        className="md:hidden inline-flex items-center justify-center h-10 w-10 p-0"
+        onClick={() => setOpen(true)}
+        icon={<Menu className="h-5 w-5" />}
+      />
+      <Drawer
+        placement="left"
+        onClose={() => setOpen(false)}
+        open={open}
+        width={256}
+        styles={{ body: { padding: 0 } }}
+        closable={false}
+      >
         <SidebarContent onClick={() => setOpen(false)} />
-      </SheetContent>
-    </Sheet>
+      </Drawer>
+    </>
   );
 }

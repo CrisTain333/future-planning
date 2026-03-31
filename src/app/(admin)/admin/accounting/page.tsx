@@ -6,23 +6,7 @@ import { useGetUsersQuery } from "@/store/users-api";
 import { IPayment, IUser } from "@/types";
 import { PaymentTable } from "@/components/accounting/payment-table";
 import { PaymentFormModal } from "@/components/accounting/payment-form-modal";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-} from "@/components/ui/pagination";
+import { Button, Input, Select, Pagination } from "antd";
 import { PlusIcon, Calculator } from "lucide-react";
 
 const MONTH_FILTER_OPTIONS = [
@@ -40,10 +24,9 @@ const MONTH_FILTER_OPTIONS = [
   { value: 12, label: "December" },
 ];
 
-const LIMIT = 10;
-
 export default function AccountingPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [filterUserId, setFilterUserId] = useState<string>("");
   const [filterMonth, setFilterMonth] = useState<number | "">("");
   const [filterYear, setFilterYear] = useState<number | "">(
@@ -58,7 +41,7 @@ export default function AccountingPage() {
 
   const { data: paymentsData, isLoading } = useGetPaymentsQuery({
     page,
-    limit: LIMIT,
+    limit,
     ...(filterUserId ? { userId: filterUserId } : {}),
     ...(filterMonth ? { month: filterMonth } : {}),
     ...(filterYear ? { year: filterYear } : {}),
@@ -92,66 +75,61 @@ export default function AccountingPage() {
             Record and manage member payments
           </p>
         </div>
-        <Button onClick={handleOpenCreate} className="glow-primary gap-2">
-          <PlusIcon className="h-4 w-4" />
+        <Button 
+          type="primary" 
+          onClick={handleOpenCreate} 
+          className="glow-primary gap-2"
+          icon={<PlusIcon className="h-4 w-4" />}
+        >
           Record Payment
         </Button>
       </div>
 
       {/* Filters Card */}
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      <div className="glass-card rounded-xl p-4 lg:p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Member</span>
+            <label className="text-sm font-medium text-muted-foreground">Filter by Member</label>
             <Select
+              className="w-full bg-white/50"
               value={filterUserId || undefined}
-              onValueChange={(val) => {
+              onChange={(val) => {
                 setFilterUserId(val as string);
                 setPage(1);
               }}
-            >
-              <SelectTrigger className="w-full sm:w-48 bg-white/50">
-                <SelectValue placeholder="All members" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All members</SelectItem>
-                {users.map((user: IUser) => (
-                  <SelectItem key={user._id} value={user._id}>
-                    {user.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="All members"
+              options={[
+                { label: "All members", value: "" },
+                ...users.map((user: IUser) => ({
+                  label: user.fullName,
+                  value: user._id,
+                }))
+              ]}
+            />
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Month</span>
+            <label className="text-sm font-medium text-muted-foreground">Filter by Month</label>
             <Select
+              className="w-full bg-white/50"
               value={filterMonth || undefined}
-              onValueChange={(val) => {
+              onChange={(val) => {
                 setFilterMonth(val as number | "");
                 setPage(1);
               }}
-            >
-              <SelectTrigger className="w-full sm:w-40 bg-white/50">
-                <SelectValue placeholder="All months" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All months</SelectItem>
-                {MONTH_FILTER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="All months"
+              options={[
+                { label: "All months", value: "" },
+                ...MONTH_FILTER_OPTIONS
+              ]}
+            />
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-sm font-medium">Year</span>
+            <label className="text-sm font-medium text-muted-foreground">Filter by Year</label>
             <Input
               type="number"
-              className="w-full sm:w-28 bg-white/50"
+              className="w-full bg-white/50"
               value={filterYear}
               onChange={(e) => {
                 const val = e.target.value ? Number(e.target.value) : "";
@@ -182,45 +160,26 @@ export default function AccountingPage() {
             <PaymentTable
               payments={payments}
               page={page}
-              limit={LIMIT}
+              limit={limit}
               onEdit={handleEdit}
             />
           )}
         </div>
         {/* Pagination inside the card */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-white/20">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    aria-disabled={page <= 1}
-                    className={page <= 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (p) => (
-                    <PaginationItem key={p}>
-                      <PaginationLink
-                        isActive={p === page}
-                        onClick={() => setPage(p)}
-                        className="cursor-pointer"
-                      >
-                        {p}
-                      </PaginationLink>
-                    </PaginationItem>
-                  )
-                )}
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    aria-disabled={page >= totalPages}
-                    className={page >= totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+        {(pagination?.total ?? 0) > 0 && (
+          <div className="p-4 border-t border-white/20 flex justify-center">
+            <Pagination
+              current={page}
+              total={pagination?.total ?? 0}
+              pageSize={limit}
+              onChange={(p) => setPage(p)}
+              showSizeChanger={true}
+              onShowSizeChange={(current, size) => {
+                setLimit(size);
+                setPage(1);
+              }}
+              pageSizeOptions={['10', '20', '50', '100']}
+            />
           </div>
         )}
       </div>

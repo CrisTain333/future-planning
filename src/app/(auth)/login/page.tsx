@@ -3,12 +3,10 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, LoginInput } from "@/validations/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Input } from "antd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LoginPage() {
@@ -17,7 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginInput>({
@@ -61,11 +59,18 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                placeholder="Enter username"
-                {...register("username")}
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="username">Username</label>
+              <Controller
+                name="username"
+                control={control}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    id="username"
+                    placeholder="Enter username"
+                    status={errors.username ? "error" : undefined}
+                  />
+                )}
               />
               {errors.username && (
                 <p className="text-sm text-destructive">{errors.username.message}</p>
@@ -73,12 +78,18 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter password"
-                {...register("password")}
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">Password</label>
+              <Controller
+                name="password"
+                control={control}
+                render={({ field }) => (
+                  <Input.Password
+                    {...field}
+                    id="password"
+                    placeholder="Enter password"
+                    status={errors.password ? "error" : undefined}
+                  />
+                )}
               />
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
@@ -91,8 +102,8 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full glow-primary" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+            <Button type="primary" htmlType="submit" className="w-full glow-primary" loading={loading}>
+              Sign In
             </Button>
           </form>
         </CardContent>

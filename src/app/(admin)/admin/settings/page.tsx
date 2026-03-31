@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/store/settings-api";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Input, Button, Select } from "antd";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Settings } from "lucide-react";
@@ -37,7 +35,7 @@ export default function SettingsPage() {
   const { data, isLoading } = useGetSettingsQuery();
   const [updateSettings, { isLoading: updating }] = useUpdateSettingsMutation();
 
-  const { register, handleSubmit, reset } = useForm<SettingsForm>();
+  const { control, handleSubmit, reset, watch, setValue } = useForm<SettingsForm>();
 
   useEffect(() => {
     if (data?.data) {
@@ -94,43 +92,65 @@ export default function SettingsPage() {
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="foundationName">Foundation Name</Label>
-            <Input id="foundationName" {...register("foundationName")} className="bg-white/50" />
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="foundationName">Foundation Name</label>
+            <Controller
+              name="foundationName"
+              control={control}
+              render={({ field }) => (
+                <Input id="foundationName" {...field} />
+              )}
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="monthlyAmount">Monthly Amount (BDT)</Label>
-              <Input id="monthlyAmount" type="number" {...register("monthlyAmount")} className="bg-white/50" />
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="monthlyAmount">Monthly Amount (BDT)</label>
+              <Controller
+                name="monthlyAmount"
+                control={control}
+                render={({ field }) => (
+                  <Input id="monthlyAmount" type="number" {...field} />
+                )}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="initialAmount">Initial Amount (BDT)</Label>
-              <Input id="initialAmount" type="number" {...register("initialAmount")} className="bg-white/50" />
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="initialAmount">Initial Amount (BDT)</label>
+              <Controller
+                name="initialAmount"
+                control={control}
+                render={({ field }) => (
+                  <Input id="initialAmount" type="number" {...field} />
+                )}
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startMonth">Start Month</Label>
-              <select
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="startMonth">Start Month</label>
+              <Select
                 id="startMonth"
-                className="flex h-10 w-full rounded-md border border-input bg-white/50 px-3 py-2 text-sm"
-                {...register("startMonth")}
-              >
-                {MONTHS.map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
+                className="w-full"
+                value={watch("startMonth")}
+                onChange={(val) => setValue("startMonth", val)}
+                options={MONTHS}
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startYear">Start Year</Label>
-              <Input id="startYear" type="number" {...register("startYear")} className="bg-white/50" />
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="startYear">Start Year</label>
+              <Controller
+                name="startYear"
+                control={control}
+                render={({ field }) => (
+                  <Input id="startYear" type="number" {...field} />
+                )}
+              />
             </div>
           </div>
 
           <div className="pt-2">
-            <Button type="submit" className="glow-primary" disabled={updating}>
-              {updating ? "Saving..." : "Save Settings"}
+            <Button type="primary" htmlType="submit" className="glow-primary" loading={updating}>
+              Save Settings
             </Button>
           </div>
         </form>
