@@ -7,7 +7,11 @@ export const settingsApi = api.injectEndpoints({
       query: () => "/settings",
       providesTags: ["Settings"],
     }),
+    updateSettings: builder.mutation<ApiResponse<ISettings>, Partial<ISettings>>({
+      query: (body) => ({ url: "/settings", method: "PUT", body }),
+      invalidatesTags: ["Settings"],
+    }),
   }),
 });
 
-export const { useGetSettingsQuery } = settingsApi;
+export const { useGetSettingsQuery, useUpdateSettingsMutation } = settingsApi;
