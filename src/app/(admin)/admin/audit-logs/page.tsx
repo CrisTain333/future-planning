@@ -51,11 +51,11 @@ const ACTION_OPTIONS = Object.entries(ACTION_LABELS).map(([value, label]) => ({
 
 const LIMIT = 15;
 
-interface IAuditLog {
+interface AuditLogEntry {
   _id: string;
   action: string;
-  performedBy: { _id: string; fullName: string };
-  targetUser: { _id: string; fullName: string } | null;
+  performedBy: string | { _id: string; fullName: string };
+  targetUser?: string | { _id: string; fullName: string } | null;
   details: Record<string, unknown>;
   createdAt: string;
 }
@@ -137,7 +137,7 @@ export default function AuditLogsPage() {
     ...(filterPerformedBy ? { performedBy: filterPerformedBy } : {}),
   });
 
-  const logs: IAuditLog[] = auditData?.data ?? [];
+  const logs: AuditLogEntry[] = auditData?.data ?? [];
   const pagination = auditData?.pagination;
   const totalPages = pagination?.totalPages ?? 1;
 
@@ -223,10 +223,10 @@ export default function AuditLogsPage() {
                       {ACTION_LABELS[log.action] ?? log.action}
                     </TableCell>
                     <TableCell>
-                      {log.performedBy?.fullName ?? "Unknown"}
+                      {typeof log.performedBy === "object" ? log.performedBy?.fullName : "Unknown"}
                     </TableCell>
                     <TableCell>
-                      {log.targetUser?.fullName ?? "—"}
+                      {typeof log.targetUser === "object" && log.targetUser ? log.targetUser.fullName : "—"}
                     </TableCell>
                     <TableCell className="max-w-xs truncate text-muted-foreground">
                       {formatDetails(log.details)}

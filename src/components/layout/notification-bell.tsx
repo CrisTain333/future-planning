@@ -54,7 +54,7 @@ export function NotificationBell() {
 
   const handleNotificationClick = (notification: INotification) => {
     if (!notification.isRead) {
-      markRead({ ids: [notification._id] });
+      markRead({ notificationIds: [notification._id] });
     }
   };
 
@@ -63,7 +63,7 @@ export function NotificationBell() {
       .filter((n) => !n.isRead)
       .map((n) => n._id);
     if (unreadIds.length > 0) {
-      markRead({ ids: unreadIds });
+      markRead({ notificationIds: unreadIds });
     }
   };
 
