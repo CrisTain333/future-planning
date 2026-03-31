@@ -76,11 +76,9 @@ export function MobileSidebar() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
+      <SheetTrigger className="md:hidden inline-flex items-center justify-center rounded-md text-sm font-medium h-10 w-10 hover:bg-accent hover:text-accent-foreground">
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle menu</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>

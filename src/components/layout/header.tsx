@@ -39,14 +39,12 @@ export function Header() {
         </Button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
+          <DropdownMenuTrigger className="relative h-8 w-8 rounded-full cursor-pointer">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5">
@@ -56,11 +54,9 @@ export function Header() {
               </p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/profile" className="cursor-pointer">
-                <UserCircle className="mr-2 h-4 w-4" />
-                Profile
-              </Link>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => window.location.href = "/profile"}>
+              <UserCircle className="mr-2 h-4 w-4" />
+              Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
