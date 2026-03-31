@@ -23,7 +23,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, Calculator } from "lucide-react";
 
 const MONTH_FILTER_OPTIONS = [
   { value: 1, label: "January" },
@@ -80,98 +80,116 @@ export default function AccountingPage() {
   const totalPages = pagination?.totalPages ?? 1;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Accounting</h1>
-        <Button onClick={handleOpenCreate}>
-          <PlusIcon data-icon="inline-start" />
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Calculator className="h-6 w-6 text-primary" />
+            Accounting
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Record and manage member payments
+          </p>
+        </div>
+        <Button onClick={handleOpenCreate} className="glow-primary gap-2">
+          <PlusIcon className="h-4 w-4" />
           Record Payment
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="space-y-1.5">
-          <span className="text-sm font-medium">Member</span>
-          <Select
-            value={filterUserId || undefined}
-            onValueChange={(val) => {
-              setFilterUserId(val as string);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All members" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All members</SelectItem>
-              {users.map((user: IUser) => (
-                <SelectItem key={user._id} value={user._id}>
-                  {user.fullName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Filters Card */}
+      <div className="glass-card rounded-xl p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium">Member</span>
+            <Select
+              value={filterUserId || undefined}
+              onValueChange={(val) => {
+                setFilterUserId(val as string);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-48 bg-white/50">
+                <SelectValue placeholder="All members" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All members</SelectItem>
+                {users.map((user: IUser) => (
+                  <SelectItem key={user._id} value={user._id}>
+                    {user.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-1.5">
-          <span className="text-sm font-medium">Month</span>
-          <Select
-            value={filterMonth || undefined}
-            onValueChange={(val) => {
-              setFilterMonth(val as number | "");
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue placeholder="All months" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All months</SelectItem>
-              {MONTH_FILTER_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium">Month</span>
+            <Select
+              value={filterMonth || undefined}
+              onValueChange={(val) => {
+                setFilterMonth(val as number | "");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 bg-white/50">
+                <SelectValue placeholder="All months" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All months</SelectItem>
+                {MONTH_FILTER_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-1.5">
-          <span className="text-sm font-medium">Year</span>
-          <Input
-            type="number"
-            className="w-full sm:w-28"
-            value={filterYear}
-            onChange={(e) => {
-              const val = e.target.value ? Number(e.target.value) : "";
-              setFilterYear(val);
-              setPage(1);
-            }}
-            placeholder="Year"
-            min={2020}
-            max={2100}
-          />
+          <div className="space-y-1.5">
+            <span className="text-sm font-medium">Year</span>
+            <Input
+              type="number"
+              className="w-full sm:w-28 bg-white/50"
+              value={filterYear}
+              onChange={(e) => {
+                const val = e.target.value ? Number(e.target.value) : "";
+                setFilterYear(val);
+                setPage(1);
+              }}
+              placeholder="Year"
+              min={2020}
+              max={2100}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12 text-muted-foreground">
-          Loading payments...
+      {/* Table Card */}
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-white/20">
+          <h2 className="text-sm font-medium text-muted-foreground">
+            {pagination?.total ?? 0} total payments
+          </h2>
         </div>
-      ) : (
-        <>
-          <PaymentTable
-            payments={payments}
-            page={page}
-            limit={LIMIT}
-            onEdit={handleEdit}
-          />
-
-          {/* Pagination */}
-          {totalPages > 1 && (
+        <div className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground">
+              Loading payments...
+            </div>
+          ) : (
+            <PaymentTable
+              payments={payments}
+              page={page}
+              limit={LIMIT}
+              onEdit={handleEdit}
+            />
+          )}
+        </div>
+        {/* Pagination inside the card */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-white/20">
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
@@ -203,9 +221,9 @@ export default function AccountingPage() {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-          )}
-        </>
-      )}
+          </div>
+        )}
+      </div>
 
       {/* Payment form modal */}
       <PaymentFormModal
