@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <SessionProvider>
           <ReduxProvider>
+            <SpeedInsights />
             <ConfigProvider
               theme={{
                 token: {
