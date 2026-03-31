@@ -7,6 +7,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  PieLabelRenderProps,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -48,13 +49,13 @@ export function MemberPieChart({ data }: MemberPieChartProps) {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={({ name, percentage }) => `${name} (${percentage}%)`}
+                label={({ name, payload }: PieLabelRenderProps) => `${name || ""} (${(payload as MemberShareEntry)?.percentage ?? 0}%)`}
               >
                 {data.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number) => [`৳${value.toLocaleString()}`, "Total"]} />
+              <Tooltip formatter={(value) => [`৳${Number(value).toLocaleString()}`, "Total"]} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

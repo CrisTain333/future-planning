@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     const parsed = createUserSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.errors[0].message },
+        { success: false, error: parsed.error.issues[0].message },
         { status: 400 }
       );
     }

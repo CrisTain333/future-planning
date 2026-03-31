@@ -44,7 +44,7 @@ export function FundLineChart({ data }: FundLineChartProps) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="label" fontSize={12} tickLine={false} axisLine={false} />
               <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `৳${v.toLocaleString()}`} />
-              <Tooltip formatter={(value: number) => [`৳${value.toLocaleString()}`, "Total Fund"]} />
+              <Tooltip formatter={(value) => [`৳${Number(value).toLocaleString()}`, "Total Fund"]} />
               <Line
                 type="monotone"
                 dataKey="total"
