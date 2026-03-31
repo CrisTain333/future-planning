@@ -8,6 +8,7 @@ import {
   Users,
   Megaphone,
   Calculator,
+  ScrollText,
   UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const adminLinks = [
   { href: "/admin/users", label: "Manage Users", icon: Users },
   { href: "/admin/notices", label: "Notice Board", icon: Megaphone },
   { href: "/admin/accounting", label: "Accounting", icon: Calculator },
+  { href: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
