@@ -1,5 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+if (typeof process !== "undefined" && !process.emitWarning) {
+  process.emitWarning = (() => {}) as typeof process.emitWarning;
+}
+
 export interface IPaymentDocument extends Document {
   userId: mongoose.Types.ObjectId;
   month: number;

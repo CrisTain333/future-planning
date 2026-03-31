@@ -1,5 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+if (typeof process !== "undefined" && !process.emitWarning) {
+  process.emitWarning = (() => {}) as typeof process.emitWarning;
+}
+
 export interface INotificationDocument extends Document {
   userId: mongoose.Types.ObjectId;
   type: "payment_recorded" | "notice_posted";
