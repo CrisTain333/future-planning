@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { IPayment, IUser } from "@/types";
-import { useDeletePaymentMutation } from "@/store/payments-api";
-import { toast } from "sonner";
 import {
   Table,
   TableHeader,
@@ -13,16 +10,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 
 const MONTH_NAMES = [
   "Jan",
@@ -52,21 +40,6 @@ export function PaymentTable({
   limit,
   onEdit,
 }: PaymentTableProps) {
-  const [deletePayment, { isLoading: isDeleting }] =
-    useDeletePaymentMutation();
-  const [deleteTarget, setDeleteTarget] = useState<IPayment | null>(null);
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deletePayment(deleteTarget._id).unwrap();
-      toast.success("Payment deleted successfully");
-      setDeleteTarget(null);
-    } catch {
-      toast.error("Failed to delete payment");
-    }
-  };
-
   const getUserName = (userId: string | IUser) =>
     typeof userId === "object" ? userId.fullName : userId;
 
@@ -122,22 +95,13 @@ export function PaymentTable({
                     {new Date(payment.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => onEdit(payment)}
-                      >
-                        <PencilIcon />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon-sm"
-                        onClick={() => setDeleteTarget(payment)}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => onEdit(payment)}
+                    >
+                      <PencilIcon />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -163,22 +127,13 @@ export function PaymentTable({
                   {(page - 1) * limit + index + 1}.{" "}
                   {getUserName(payment.userId)}
                 </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => onEdit(payment)}
-                  >
-                    <PencilIcon />
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    onClick={() => setDeleteTarget(payment)}
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => onEdit(payment)}
+                >
+                  <PencilIcon />
+                </Button>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
                 <span>
@@ -199,39 +154,6 @@ export function PaymentTable({
         )}
       </div>
 
-      {/* Delete confirmation dialog */}
-      <Dialog
-        open={deleteTarget !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Payment</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the payment for{" "}
-              <strong>
-                {deleteTarget ? getUserName(deleteTarget.userId) : ""}
-              </strong>{" "}
-              ({deleteTarget ? `${MONTH_NAMES[deleteTarget.month - 1]} ${deleteTarget.year}` : ""}
-              )? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" />}>
-              Cancel
-            </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
