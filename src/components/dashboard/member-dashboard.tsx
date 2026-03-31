@@ -217,10 +217,11 @@ export default function MemberDashboard() {
   const notices: NoticeItem[] = noticeRes?.data ?? [];
   const recentNotices = notices.slice(0, 4);
 
-  const statusIsDue =
-    dashboard?.status && typeof dashboard.status === "string"
-      ? dashboard.status !== "Up to date"
-      : (dashboard?.outstanding ?? 0) > 0;
+  const statusRaw = dashboard?.status ?? "";
+  const statusIsDue = statusRaw !== "up_to_date" && statusRaw !== "Up to date";
+  const statusLabel = statusIsDue
+    ? statusRaw.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase())
+    : "Up to date";
 
   const chartData = (dashboard?.chartData ?? []).map(
     (entry) => ({
@@ -250,13 +251,7 @@ export default function MemberDashboard() {
         />
         <StatCard
           title="Status"
-          value={
-            typeof dashboard?.status === "string"
-              ? dashboard.status
-              : statusIsDue
-                ? `${dashboard?.outstanding ?? 0} months due`
-                : "Up to date"
-          }
+          value={statusLabel}
           icon={statusIsDue ? Clock : CheckCircle}
         />
       </div>
