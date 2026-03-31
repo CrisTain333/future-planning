@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import { createPaymentSchema } from "@/validations/payment";
+import { createPaymentNotification } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   try {
@@ -99,6 +100,14 @@ export async function POST(req: NextRequest) {
     const populated = await Payment.findById(payment._id)
       .populate("userId", "fullName username")
       .populate("approvedBy", "fullName");
+
+    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    await createPaymentNotification(
+      parsed.data.userId,
+      payment._id.toString(),
+      `${MONTHS[parsed.data.month - 1]} ${parsed.data.year}`,
+      parsed.data.amount
+    );
 
     return NextResponse.json({ success: true, data: populated, message: "Payment recorded successfully" }, { status: 201 });
   } catch (error) {

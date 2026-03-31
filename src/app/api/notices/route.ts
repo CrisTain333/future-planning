@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Notice from "@/models/Notice";
 import { createNoticeSchema } from "@/validations/notice";
+import { createNoticeNotification } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   try {
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest) {
 
     const notice = await Notice.create({ ...parsed.data, createdBy: currentUser.userId });
     const populated = await Notice.findById(notice._id).populate("createdBy", "fullName");
+
+    await createNoticeNotification(notice._id.toString(), parsed.data.title);
 
     return NextResponse.json({ success: true, data: populated, message: "Notice created successfully" }, { status: 201 });
   } catch (error) {
