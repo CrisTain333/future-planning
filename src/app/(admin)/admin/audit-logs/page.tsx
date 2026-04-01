@@ -25,6 +25,8 @@ const ACTION_LABELS: Record<string, string> = {
   profile_updated: "Profile Updated",
   profile_picture_updated: "Profile Picture Updated",
   password_changed: "Password Changed",
+  user_login: "User Login",
+  user_login_failed: "Failed Login",
 };
 
 const ACTION_OPTIONS = Object.entries(ACTION_LABELS).map(([value, label]) => ({

@@ -35,7 +35,19 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError(result.error);
+        // Log failed login attempt
+        fetch("/api/auth/audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "login_failed", username: data.username, reason: result.error }),
+        }).catch(() => {});
       } else {
+        // Log successful login
+        fetch("/api/auth/audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "login_success", username: data.username }),
+        }).catch(() => {});
         router.push("/dashboard");
         router.refresh();
       }

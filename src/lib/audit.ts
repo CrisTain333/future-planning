@@ -15,7 +15,9 @@ type AuditAction =
   | "settings_updated"
   | "profile_updated"
   | "profile_picture_updated"
-  | "password_changed";
+  | "password_changed"
+  | "user_login"
+  | "user_login_failed";
 
 export async function createAuditLog(
   action: AuditAction,

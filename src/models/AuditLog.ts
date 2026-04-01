@@ -20,8 +20,10 @@ export interface IAuditLogDocument extends Document {
     | "settings_updated"
     | "profile_updated"
     | "profile_picture_updated"
-    | "password_changed";
-  performedBy: mongoose.Types.ObjectId;
+    | "password_changed"
+    | "user_login"
+    | "user_login_failed";
+  performedBy?: mongoose.Types.ObjectId;
   targetUser?: mongoose.Types.ObjectId;
   details: Record<string, unknown>;
   createdAt: Date;
@@ -47,10 +49,12 @@ const AuditLogSchema = new Schema<IAuditLogDocument>(
         "profile_updated",
         "profile_picture_updated",
         "password_changed",
+        "user_login",
+        "user_login_failed",
       ],
       required: true,
     },
-    performedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    performedBy: { type: Schema.Types.ObjectId, ref: "User" },
     targetUser: { type: Schema.Types.ObjectId, ref: "User" },
     details: { type: Schema.Types.Mixed, default: {} },
   },
@@ -61,6 +65,9 @@ AuditLogSchema.index({ performedBy: 1 });
 AuditLogSchema.index({ targetUser: 1 });
 AuditLogSchema.index({ createdAt: -1 });
 
-const AuditLog =
-  mongoose.models.AuditLog || mongoose.model<IAuditLogDocument>("AuditLog", AuditLogSchema);
+// Delete cached model to pick up schema changes in dev
+if (mongoose.models.AuditLog) {
+  delete mongoose.models.AuditLog;
+}
+const AuditLog = mongoose.model<IAuditLogDocument>("AuditLog", AuditLogSchema);
 export default AuditLog;
