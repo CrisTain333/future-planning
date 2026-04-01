@@ -8,7 +8,7 @@ import { StatCard } from "./stat-card";
 import { FundLineChart } from "./fund-line-chart";
 import { MemberPieChart } from "./member-pie-chart";
 import { RecentPayments } from "./recent-payments";
-import { RecentNotices } from "./recent-notices";
+import { ActivityTimeline } from "./activity-timeline";
 import { PaymentGrid } from "@/components/analytics/payment-grid";
 import { DollarSign, Users, CreditCard, AlertTriangle } from "lucide-react";
 
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
         transition={{ duration: 0.5, delay: 0.4 }}
       >
         <RecentPayments payments={dashboard.recentPayments} />
-        <RecentNotices />
+        <ActivityTimeline />
       </motion.div>
 
       {/* Row 4: Stat Cards */}

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { IPayment, IUser } from "@/types";
 import { Table, Button } from "antd";
 import type { TableProps } from "antd";
-import { PencilIcon } from "lucide-react";
+import { Eye, PencilIcon } from "lucide-react";
+import { PaymentDetailModal } from "./payment-detail-modal";
 
 const MONTH_NAMES = [
   "Jan",
@@ -33,6 +35,7 @@ export function PaymentTable({
   limit,
   onEdit,
 }: PaymentTableProps) {
+  const [viewPayment, setViewPayment] = useState<IPayment | null>(null);
   const getUserName = (userId: string | IUser) =>
     typeof userId === "object" ? userId.fullName : userId;
 
@@ -50,7 +53,11 @@ export function PaymentTable({
       title: 'Member Name',
       key: 'memberName',
       className: "font-medium",
-      render: (_, record) => getUserName(record.userId),
+      render: (_, record) => (
+        <span className="cursor-pointer hover:text-primary transition-colors" onClick={() => setViewPayment(record)}>
+          {getUserName(record.userId)}
+        </span>
+      ),
     },
     {
       title: 'Month',
@@ -88,11 +95,19 @@ export function PaymentTable({
       key: 'actions',
       align: 'right',
       render: (_, record) => (
-        <Button
-          type="text"
-          icon={<PencilIcon className="h-4 w-4" />}
-          onClick={() => onEdit(record)}
-        />
+        <>
+          <Button
+            type="text"
+            icon={<Eye className="h-4 w-4 text-primary" />}
+            onClick={() => setViewPayment(record)}
+            title="View details"
+          />
+          <Button
+            type="text"
+            icon={<PencilIcon className="h-4 w-4" />}
+            onClick={() => onEdit(record)}
+          />
+        </>
       ),
     },
   ];
@@ -152,6 +167,11 @@ export function PaymentTable({
         )}
       </div>
 
+      <PaymentDetailModal
+        open={viewPayment !== null}
+        onClose={() => setViewPayment(null)}
+        payment={viewPayment}
+      />
     </>
   );
 }
