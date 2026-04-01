@@ -90,71 +90,51 @@ export default function AccountingPage() {
       </div>
 
       {/* Filters Card */}
-      <div className="glass-card rounded-xl p-4 lg:p-6 mb-6 space-y-4">
-        {/* Search bar */}
-        <div>
-          <Input
-            placeholder="Search by member name or receipt no..."
-            prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            allowClear
-            size="large"
-          />
-        </div>
-        {/* Filter dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Member</label>
+      <div className="glass-card rounded-xl p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search */}
+          <div className="flex-1">
+            <Input
+              placeholder="Search by name or receipt no..."
+              prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              allowClear
+            />
+          </div>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2">
             <Select
-              className="w-full bg-white/50"
+              className="w-full sm:w-40"
               value={filterUserId || undefined}
-              onChange={(val) => {
-                setFilterUserId(val as string);
-                setPage(1);
-              }}
+              onChange={(val) => { setFilterUserId(val as string); setPage(1); }}
               placeholder="All members"
               options={[
                 { label: "All members", value: "" },
-                ...users.map((user: IUser) => ({
-                  label: user.fullName,
-                  value: user._id,
-                }))
+                ...users.map((user: IUser) => ({ label: user.fullName, value: user._id }))
               ]}
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Month</label>
             <Select
-              className="w-full bg-white/50"
+              className="w-full sm:w-36"
               value={filterMonth || undefined}
-              onChange={(val) => {
-                setFilterMonth(val as number | "");
-                setPage(1);
-              }}
+              onChange={(val) => { setFilterMonth(val as number | ""); setPage(1); }}
               placeholder="All months"
               options={[
                 { label: "All months", value: "" },
                 ...MONTH_FILTER_OPTIONS
               ]}
             />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Year</label>
-            <Input
-              type="number"
-              className="w-full bg-white/50"
-              value={filterYear}
-              onChange={(e) => {
-                const val = e.target.value ? Number(e.target.value) : "";
-                setFilterYear(val);
-                setPage(1);
-              }}
+            <Select
+              className="w-full sm:w-28"
+              value={filterYear || undefined}
+              onChange={(val) => { setFilterYear(val as number | ""); setPage(1); }}
               placeholder="Year"
-              min={2020}
-              max={2100}
+              options={[
+                { label: "All years", value: "" },
+                { label: "2026", value: 2026 },
+                { label: "2027", value: 2027 },
+                { label: "2028", value: 2028 },
+              ]}
             />
           </div>
         </div>
