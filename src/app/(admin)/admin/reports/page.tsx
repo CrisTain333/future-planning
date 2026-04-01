@@ -89,6 +89,13 @@ export default function ReportsPage() {
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
+      ) : report?.isSkipped ? (
+        <div className="glass-card rounded-xl p-6 text-center">
+          <p className="text-lg font-medium text-muted-foreground">Collection Skipped</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {report.skipReason ? `Reason: ${report.skipReason}` : "No collection was scheduled for this month"}
+          </p>
+        </div>
       ) : report ? (
         <>
           {/* Summary Cards */}

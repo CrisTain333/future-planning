@@ -9,12 +9,14 @@ const STATUS_COLORS: Record<string, string> = {
   paid: "bg-emerald-500",
   paid_penalty: "bg-amber-500",
   unpaid: "bg-red-400/40",
+  skipped: "bg-gray-300/60",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   paid: "Paid",
   paid_penalty: "Paid (Penalty)",
   unpaid: "Unpaid",
+  skipped: "Skipped",
 };
 
 export function PaymentGrid() {
@@ -56,6 +58,10 @@ export function PaymentGrid() {
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-sm bg-red-400/40" />
               <span className="text-muted-foreground">Unpaid</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-gray-300/60" />
+              <span className="text-muted-foreground">Skipped</span>
             </div>
           </div>
         </div>

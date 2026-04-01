@@ -12,7 +12,11 @@ export function CollectionRateChart() {
 
   if (isLoading) return <Card className="glass-card"><CardContent className="p-6"><Skeleton className="h-[300px] w-full" /></CardContent></Card>;
 
-  const chartData = data?.data || [];
+  const chartData = (data?.data || []).map(d => ({
+    ...d,
+    rate: d.skipped ? null : d.rate,
+    paid: d.skipped ? 0 : d.paid,
+  }));
 
   return (
     <Card className="glass-card">
