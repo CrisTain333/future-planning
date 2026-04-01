@@ -243,7 +243,7 @@ export default function AuditLogsPage() {
             {total} audit entries
           </h2>
         </div>
-        <div className="overflow-x-auto p-0">
+        <div className="table-container overflow-x-auto">
           {logs.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
               <FileX2 className="h-10 w-10" />

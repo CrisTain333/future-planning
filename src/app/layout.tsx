@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/components/providers/redux-provider";
 import SessionProvider from "@/components/providers/session-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "react-hot-toast";
 import { ConfigProvider } from "antd";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               {children}
             </ConfigProvider>
-            <Toaster />
+            <Toaster position="top-right" toastOptions={{ duration: 3000, style: { background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' } }} />
           </ReduxProvider>
         </SessionProvider>
       </body>

@@ -151,7 +151,7 @@ export default function AccountingPage() {
             {pagination?.total ?? 0} total payments
           </h2>
         </div>
-        <div className="p-0">
+        <div className="table-container">
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
               Loading payments...

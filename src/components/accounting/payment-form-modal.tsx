@@ -8,7 +8,7 @@ import {
 } from "@/store/payments-api";
 import { useGetUsersQuery } from "@/store/users-api";
 import { useGetSettingsQuery } from "@/store/settings-api";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { Modal, Select, Input, Button } from "antd";
 
 const MONTH_OPTIONS = [

@@ -34,7 +34,12 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error);
+        // NextAuth wraps errors — map to friendly messages
+        const errorMap: Record<string, string> = {
+          CredentialsSignin: "Invalid username or password",
+          Configuration: "Server configuration error",
+        };
+        setError(errorMap[result.error] || result.error);
         // Log failed login attempt
         fetch("/api/auth/audit", {
           method: "POST",

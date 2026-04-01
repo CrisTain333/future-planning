@@ -9,7 +9,7 @@ import { PencilIcon, KeyRound, ToggleLeftIcon, ToggleRightIcon } from "lucide-re
 import { ResetPasswordModal } from "./reset-password-modal";
 import { useState } from "react";
 import { useToggleUserStatusMutation } from "@/store/users-api";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 interface UserTableProps {
   users: IUser[];

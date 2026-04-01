@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Modal, Input } from "antd";
 import { useUpdateUserMutation } from "@/store/users-api";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { KeyRound } from "lucide-react";
 
 interface ResetPasswordModalProps {

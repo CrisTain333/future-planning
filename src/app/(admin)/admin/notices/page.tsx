@@ -55,7 +55,7 @@ export default function NoticesPage() {
             {total} total notices
           </h2>
         </div>
-        <div className="p-0">
+        <div className="table-container">
           <NoticeTable
             notices={notices}
             isLoading={isLoading}

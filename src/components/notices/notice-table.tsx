@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { useDeleteNoticeMutation } from "@/store/notices-api";
 import { INotice, IUser } from "@/types";
 import type { TableProps } from "antd";

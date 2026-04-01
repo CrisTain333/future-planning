@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/store/settings-api";
 import { Input, Button, Select } from "antd";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { Settings } from "lucide-react";
 
 const MONTHS = [
