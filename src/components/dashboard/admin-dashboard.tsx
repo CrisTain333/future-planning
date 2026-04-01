@@ -9,6 +9,7 @@ import { FundLineChart } from "./fund-line-chart";
 import { MemberPieChart } from "./member-pie-chart";
 import { RecentPayments } from "./recent-payments";
 import { RecentNotices } from "./recent-notices";
+import { PaymentGrid } from "@/components/analytics/payment-grid";
 import { DollarSign, Users, CreditCard, AlertTriangle } from "lucide-react";
 
 function DashboardSkeleton() {
@@ -75,23 +76,32 @@ export default function AdminDashboard() {
         <MemberPieChart data={dashboard.memberShareChart} />
       </motion.div>
 
-      {/* Row 2: Recent Activity */}
+      {/* Row 2: Payment Status Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <PaymentGrid />
+      </motion.div>
+
+      {/* Row 3: Recent Activity */}
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
       >
         <RecentPayments payments={dashboard.recentPayments} />
         <RecentNotices />
       </motion.div>
 
-      {/* Row 3: Stat Cards */}
+      {/* Row 4: Stat Cards */}
       <motion.div
         className="grid grid-cols-2 md:grid-cols-4 gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, delay: 0.5 }}
+        transition={{ duration: 0.3, delay: 0.6 }}
       >
         <StatCard
           title="Total Fund"
