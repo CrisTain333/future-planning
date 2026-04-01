@@ -7,7 +7,7 @@ interface PaymentGridData {
 }
 
 interface CollectionRateEntry {
-  label: string; month: number; year: number; paid: number; total: number; rate: number;
+  label: string; month: number; year: number; paid: number; total: number; rate: number; skipped?: boolean;
 }
 
 interface AnalyticsSummary {
@@ -34,6 +34,8 @@ interface MonthlyReportData {
   expectedAmountPerMember: number;
   paidMembers: { name: string; amount: number; penalty: number; penaltyReason: string; approvedBy: string; date: string }[];
   unpaidMembers: { name: string; username: string }[];
+  isSkipped?: boolean;
+  skipReason?: string;
 }
 
 export const analyticsApi = api.injectEndpoints({
