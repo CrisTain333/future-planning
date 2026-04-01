@@ -36,7 +36,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
 
     const before = await Settings.findOne({});
-    const settings = await Settings.findOneAndUpdate({}, body, { new: true, upsert: true });
+    const settings = await Settings.findOneAndUpdate({}, { $set: body }, { new: true, upsert: true, runValidators: false });
 
     await createAuditLog("settings_updated", currentUser.userId, {
       action_description: "Updated application settings",

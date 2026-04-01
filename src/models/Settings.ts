@@ -28,6 +28,8 @@ const SettingsSchema = new Schema<ISettingsDocument>(
   { timestamps: true }
 );
 
-const Settings =
-  mongoose.models.Settings || mongoose.model<ISettingsDocument>("Settings", SettingsSchema);
+if (mongoose.models.Settings) {
+  delete mongoose.models.Settings;
+}
+const Settings = mongoose.model<ISettingsDocument>("Settings", SettingsSchema);
 export default Settings;
