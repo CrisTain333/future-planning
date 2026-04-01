@@ -9,7 +9,7 @@ export const settingsApi = api.injectEndpoints({
     }),
     updateSettings: builder.mutation<ApiResponse<ISettings>, Partial<ISettings>>({
       query: (body) => ({ url: "/settings", method: "PUT", body }),
-      invalidatesTags: ["Settings"],
+      invalidatesTags: ["Settings", "Dashboard", "Payments", "Users"],
     }),
   }),
 });

@@ -129,7 +129,7 @@ export default function CollectionCalendarPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card className="glass-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Months</CardTitle>
@@ -155,18 +155,6 @@ export default function CollectionCalendarPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">{totalSkipped}</div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expected Revenue</CardTitle>
-            <CheckCircle className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ৳{((totalActive > 0 ? settings.initialAmount + (totalActive - 1) * settings.monthlyAmount : 0) * 12).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground">for all members</p>
           </CardContent>
         </Card>
       </div>
