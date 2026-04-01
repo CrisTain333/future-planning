@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Modal, Input } from "antd";
 import toast from "react-hot-toast";
-import { CalendarDays, CheckCircle, XCircle, Ban } from "lucide-react";
+import { CalendarDays, CheckCircle, XCircle, Ban, Lock } from "lucide-react";
 
 const MONTH_NAMES_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const MONTH_NAMES_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -175,20 +175,20 @@ export default function CollectionCalendarPage() {
       <div className="glass-card rounded-xl p-4">
         <div className="flex flex-wrap gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-primary/15 border border-primary/30" />
-            <span>Active — click to skip</span>
+            <div className="w-4 h-4 rounded bg-emerald-100 border-2 border-emerald-400" />
+            <span>Completed</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-200 border border-gray-300" />
-            <span>Skipped — click to resume</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-primary border border-primary" />
+            <div className="w-4 h-4 rounded bg-primary border-2 border-primary" />
             <span>Current month</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-primary/5 border border-primary/10" />
-            <span>Past month</span>
+            <div className="w-4 h-4 rounded bg-blue-50 border-2 border-blue-300" />
+            <span>Upcoming — click to skip</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-300" />
+            <span>Skipped — click to resume</span>
           </div>
         </div>
       </div>
@@ -210,27 +210,45 @@ export default function CollectionCalendarPage() {
                 const past = isPast(mo);
                 const current = isCurrent(mo);
 
+                // Past months are locked (not clickable) unless skipped
+                const locked = past && !skipped;
+
                 return (
                   <div
                     key={`${mo.month}-${mo.year}`}
-                    onClick={() => skipped ? handleUnskip(mo) : handleSkip(mo)}
+                    onClick={() => {
+                      if (locked) return;
+                      skipped ? handleUnskip(mo) : handleSkip(mo);
+                    }}
                     className={`
-                      relative rounded-xl p-4 cursor-pointer transition-all duration-200 border text-center
-                      hover:shadow-md hover:-translate-y-0.5
+                      relative rounded-xl p-4 transition-all duration-200 border-2 text-center
+                      ${locked ? "cursor-default opacity-80" : "cursor-pointer hover:shadow-lg hover:-translate-y-1"}
                       ${skipped
-                        ? "bg-gray-100 border-gray-300 hover:bg-gray-200"
+                        ? "bg-red-50 border-red-300 hover:bg-red-100"
                         : current
-                          ? "bg-primary/15 border-primary ring-2 ring-primary/30"
+                          ? "bg-primary/20 border-primary ring-2 ring-primary/40 shadow-md"
                           : past
-                            ? "bg-primary/5 border-primary/10 hover:bg-primary/10"
-                            : "bg-primary/10 border-primary/25 hover:bg-primary/20"
+                            ? "bg-emerald-50 border-emerald-300"
+                            : "bg-blue-50 border-blue-300 hover:bg-blue-100"
                       }
                     `}
                   >
-                    <div className={`text-lg font-bold ${skipped ? "text-gray-400 line-through" : "text-foreground"}`}>
+                    {locked && (
+                      <div className="absolute top-1.5 right-1.5">
+                        <Lock className="h-3 w-3 text-emerald-500" />
+                      </div>
+                    )}
+                    <div className={`text-lg font-bold ${
+                      skipped ? "text-red-400 line-through"
+                        : current ? "text-primary"
+                        : past ? "text-emerald-700"
+                        : "text-blue-700"
+                    }`}>
                       {MONTH_NAMES_SHORT[mo.month - 1]}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                    <div className={`text-xs mt-0.5 ${
+                      skipped ? "text-red-400" : past ? "text-emerald-600" : "text-muted-foreground"
+                    }`}>
                       {MONTH_NAMES_FULL[mo.month - 1]}
                     </div>
 
@@ -240,19 +258,22 @@ export default function CollectionCalendarPage() {
                       </Badge>
                     )}
                     {skipped && reason && (
-                      <p className="text-[10px] text-gray-400 mt-1 truncate" title={reason}>
+                      <p className="text-[10px] text-red-400 mt-1 truncate" title={reason}>
                         {reason}
                       </p>
                     )}
                     {!skipped && current && (
-                      <Badge className="mt-2 text-[10px] px-1.5 py-0 bg-primary">
+                      <Badge className="mt-2 text-[10px] px-1.5 py-0 bg-primary text-white">
                         Current
                       </Badge>
                     )}
-                    {!skipped && !current && (
+                    {!skipped && past && (
                       <div className="mt-2">
                         <CheckCircle className="h-3.5 w-3.5 text-emerald-500 mx-auto" />
                       </div>
+                    )}
+                    {!skipped && !current && !past && (
+                      <p className="text-[10px] text-blue-500 mt-2 font-medium">Upcoming</p>
                     )}
                   </div>
                 );
