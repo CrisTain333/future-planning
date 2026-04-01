@@ -22,8 +22,8 @@ export function PaymentDetailModal({ open, onClose, payment }: PaymentDetailModa
 
   if (!payment) return null;
 
-  const memberName = typeof payment.userId === "object" ? (payment.userId as IUser).fullName : "Unknown";
-  const approvedByName = typeof payment.approvedBy === "object" ? (payment.approvedBy as IUser).fullName : "Unknown";
+  const memberName = payment.userId && typeof payment.userId === "object" ? (payment.userId as IUser).fullName : "Unknown";
+  const approvedByName = payment.approvedBy && typeof payment.approvedBy === "object" ? (payment.approvedBy as IUser).fullName : "Unknown";
   const total = payment.amount + payment.penalty;
 
   const handleDownloadReceipt = () => {

@@ -36,11 +36,11 @@ export function PaymentTable({
   onEdit,
 }: PaymentTableProps) {
   const [viewPayment, setViewPayment] = useState<IPayment | null>(null);
-  const getUserName = (userId: string | IUser) =>
-    typeof userId === "object" ? userId.fullName : userId;
+  const getUserName = (userId: string | IUser | null | undefined) =>
+    userId && typeof userId === "object" ? userId.fullName : String(userId || "Unknown");
 
-  const getApprovedByName = (approvedBy: string | IUser) =>
-    typeof approvedBy === "object" ? approvedBy.fullName : approvedBy;
+  const getApprovedByName = (approvedBy: string | IUser | null | undefined) =>
+    approvedBy && typeof approvedBy === "object" ? approvedBy.fullName : String(approvedBy || "Unknown");
 
   const columns: TableProps<IPayment>['columns'] = [
     {
