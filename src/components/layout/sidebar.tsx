@@ -91,7 +91,7 @@ export function MobileSidebar() {
         placement="left"
         onClose={() => setOpen(false)}
         open={open}
-        width={256}
+        size="default"
         styles={{ body: { padding: 0 } }}
         closable={false}
       >
