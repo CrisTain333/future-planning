@@ -56,12 +56,13 @@ function FormattedDetails({ details }: { details: Record<string, unknown> }) {
     return <span className="text-muted-foreground">—</span>;
   }
 
-  const { action_description, changes, timestamp, ...rest } = details;
+  const { action_description, changes, timestamp: _ts, ...rest } = details;
+  const description = typeof action_description === "string" ? action_description : null;
 
   return (
     <div className="text-xs space-y-1">
-      {action_description && (
-        <p className="font-medium text-foreground">{String(action_description)}</p>
+      {description && (
+        <p className="font-medium text-foreground">{description}</p>
       )}
       {Array.isArray(changes) && changes.length > 0 && (
         <div className="space-y-0.5 pl-2 border-l-2 border-primary/20">
