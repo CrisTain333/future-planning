@@ -42,7 +42,7 @@ export default function AccountingPage() {
   const { data: usersData } = useGetUsersQuery({ page: 1, limit: 100 });
   const users = usersData?.data ?? [];
 
-  const { data: paymentsData, isLoading } = useGetPaymentsQuery({
+  const { data: paymentsData, isLoading, isFetching } = useGetPaymentsQuery({
     page,
     limit,
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
@@ -147,10 +147,21 @@ export default function AccountingPage() {
             {pagination?.total ?? 0} total payments
           </h2>
         </div>
-        <div className="table-container">
+        <div className="table-container relative">
+          {isFetching && !isLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Loading...
+              </div>
+            </div>
+          )}
           {isLoading ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground">
-              Loading payments...
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Loading payments...
+              </div>
             </div>
           ) : (
             <PaymentTable

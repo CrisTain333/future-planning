@@ -34,7 +34,7 @@ export default function ManageUsersPage() {
     [page, limit, debouncedSearch, role, status]
   );
 
-  const { data, isLoading } = useGetUsersQuery(queryParams);
+  const { data, isLoading, isFetching } = useGetUsersQuery(queryParams);
 
   const users = data?.data ?? [];
   const pagination = data?.pagination;
@@ -137,7 +137,15 @@ export default function ManageUsersPage() {
             {pagination?.total ?? 0} total users
           </h2>
         </div>
-        <div className="table-container">
+        <div className="table-container relative">
+          {isFetching && !isLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Loading...
+              </div>
+            </div>
+          )}
           <UserTable
             users={users}
             isLoading={isLoading}

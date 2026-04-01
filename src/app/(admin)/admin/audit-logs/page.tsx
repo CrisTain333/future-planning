@@ -141,7 +141,7 @@ export default function AuditLogsPage() {
   const { data: usersData } = useGetUsersQuery({ page: 1, limit: 100 });
   const users = usersData?.data ?? [];
 
-  const { data: auditData, isLoading } = useGetAuditLogsQuery({
+  const { data: auditData, isLoading, isFetching } = useGetAuditLogsQuery({
     page,
     limit,
     ...(filterAction ? { action: filterAction } : {}),
@@ -243,7 +243,15 @@ export default function AuditLogsPage() {
             {total} audit entries
           </h2>
         </div>
-        <div className="table-container overflow-x-auto">
+        <div className="table-container overflow-x-auto relative">
+          {isFetching && !isLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Loading...
+              </div>
+            </div>
+          )}
           {logs.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
               <FileX2 className="h-10 w-10" />

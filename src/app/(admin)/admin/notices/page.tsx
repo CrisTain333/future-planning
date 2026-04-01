@@ -14,7 +14,7 @@ export default function NoticesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingNotice, setEditingNotice] = useState<INotice | undefined>();
 
-  const { data, isLoading } = useGetNoticesQuery({ page, limit });
+  const { data, isLoading, isFetching } = useGetNoticesQuery({ page, limit });
   const notices = data?.data ?? [];
   const pagination = data?.pagination;
   const total = pagination?.total ?? 0;
@@ -55,7 +55,15 @@ export default function NoticesPage() {
             {total} total notices
           </h2>
         </div>
-        <div className="table-container">
+        <div className="table-container relative">
+          {isFetching && !isLoading && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Loading...
+              </div>
+            </div>
+          )}
           <NoticeTable
             notices={notices}
             isLoading={isLoading}
