@@ -51,41 +51,79 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatValue(val: unknown): string {
+  if (val === null || val === undefined) return "N/A";
+  if (typeof val === "object") {
+    try { return JSON.stringify(val); } catch { return String(val); }
+  }
+  return String(val);
+}
+
 function FormattedDetails({ details }: { details: Record<string, unknown> }) {
   if (!details || Object.keys(details).length === 0) {
-    return <span className="text-muted-foreground">—</span>;
+    return <span className="text-muted-foreground italic">No details</span>;
   }
 
   const { action_description, changes, timestamp: _ts, ...rest } = details;
   const description = typeof action_description === "string" ? action_description : null;
 
+  // Handle changes — could be an array (new format) or object (old format)
+  const changeItems: { field: string; from?: unknown; to?: unknown }[] = [];
+  if (Array.isArray(changes)) {
+    changeItems.push(...(changes as { field: string; from?: unknown; to?: unknown }[]));
+  } else if (changes && typeof changes === "object") {
+    // Old format: { changes: { amount: 2000, penalty: 0 } }
+    for (const [key, val] of Object.entries(changes as Record<string, unknown>)) {
+      changeItems.push({ field: key, to: val });
+    }
+  }
+
+  // Collect remaining simple fields (skip objects unless they're small)
+  const extraFields: { label: string; value: string }[] = [];
+  for (const [key, val] of Object.entries(rest)) {
+    const label = key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/_/g, " ")
+      .replace(/^\w/, (c) => c.toUpperCase())
+      .trim();
+    if (typeof val === "object" && val !== null) {
+      const str = JSON.stringify(val);
+      if (str.length < 100) extraFields.push({ label, value: str });
+    } else if (val !== undefined && val !== null && val !== "") {
+      extraFields.push({ label, value: String(val) });
+    }
+  }
+
+  const hasContent = description || changeItems.length > 0 || extraFields.length > 0;
+  if (!hasContent) {
+    return <span className="text-muted-foreground italic">No details</span>;
+  }
+
   return (
-    <div className="text-xs space-y-1">
+    <div className="text-xs space-y-1.5 max-w-xs">
       {description && (
-        <p className="font-medium text-foreground">{description}</p>
+        <p className="font-medium text-foreground leading-snug">{description}</p>
       )}
-      {Array.isArray(changes) && changes.length > 0 && (
+      {changeItems.length > 0 && (
         <div className="space-y-0.5 pl-2 border-l-2 border-primary/20">
-          {(changes as { field: string; from?: unknown; to?: unknown }[]).map((change, i) => (
+          {changeItems.map((change, i) => (
             <div key={i} className="text-muted-foreground">
               <span className="font-medium capitalize">{change.field.replace(/_/g, " ")}:</span>{" "}
-              {change.from !== undefined && <><span className="line-through text-red-500">{String(change.from)}</span> &rarr; </>}
-              <span className="text-emerald-600">{String(change.to)}</span>
+              {change.from !== undefined && (
+                <><span className="line-through text-red-500/70">{formatValue(change.from)}</span> → </>
+              )}
+              <span className="text-emerald-600 font-medium">{formatValue(change.to)}</span>
             </div>
           ))}
         </div>
       )}
-      {Object.entries(rest).length > 0 && (
+      {extraFields.length > 0 && (
         <div className="space-y-0.5">
-          {Object.entries(rest).map(([key, val]) => {
-            if (typeof val === "object") return null;
-            const label = key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
-            return (
-              <div key={key} className="text-muted-foreground">
-                <span className="font-medium">{label}:</span> {String(val)}
-              </div>
-            );
-          })}
+          {extraFields.map(({ label, value }) => (
+            <div key={label} className="text-muted-foreground">
+              <span className="font-medium">{label}:</span> {value}
+            </div>
+          ))}
         </div>
       )}
     </div>
