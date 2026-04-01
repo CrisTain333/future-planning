@@ -1,5 +1,5 @@
 import { api } from "./api";
-import { IPayment, PaginatedResponse, ApiResponse } from "@/types";
+import { IAuditLog, IPayment, PaginatedResponse, ApiResponse } from "@/types";
 
 interface GetPaymentsParams {
   page?: number;
@@ -62,6 +62,10 @@ export const paymentsApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Payments", "Dashboard"],
     }),
+    getPaymentHistory: builder.query<ApiResponse<IAuditLog[]>, string>({
+      query: (id) => `/payments/${id}/history`,
+      providesTags: ["AuditLogs"],
+    }),
   }),
 });
 
@@ -71,4 +75,5 @@ export const {
   useCreatePaymentMutation,
   useUpdatePaymentMutation,
   useDeletePaymentMutation,
+  useGetPaymentHistoryQuery,
 } = paymentsApi;
