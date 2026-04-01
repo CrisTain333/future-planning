@@ -5,7 +5,9 @@ import { Table, Button } from "antd";
 import type { TableProps } from "antd";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PencilIcon, ToggleLeftIcon, ToggleRightIcon } from "lucide-react";
+import { PencilIcon, KeyRound, ToggleLeftIcon, ToggleRightIcon } from "lucide-react";
+import { ResetPasswordModal } from "./reset-password-modal";
+import { useState } from "react";
 import { useToggleUserStatusMutation } from "@/store/users-api";
 import { toast } from "sonner";
 
@@ -26,6 +28,7 @@ export function UserTable({
 }: UserTableProps) {
   const [toggleUserStatus, { isLoading: isToggling }] =
     useToggleUserStatusMutation();
+  const [resetPasswordUser, setResetPasswordUser] = useState<IUser | null>(null);
 
   const handleToggleStatus = async (user: IUser) => {
     const action = user.isDisabled ? "enable" : "disable";
@@ -109,6 +112,13 @@ export function UserTable({
             type="text"
             icon={<PencilIcon className="h-4 w-4" />}
             onClick={() => onEdit(record)}
+            title="Edit user"
+          />
+          <Button
+            type="text"
+            icon={<KeyRound className="h-4 w-4 text-amber-600" />}
+            onClick={() => setResetPasswordUser(record)}
+            title="Reset password"
           />
           <Button
             type="text"
@@ -121,6 +131,7 @@ export function UserTable({
               )
             }
             onClick={() => handleToggleStatus(record)}
+            title={record.isDisabled ? "Enable user" : "Disable user"}
           />
         </div>
       ),
@@ -181,6 +192,11 @@ export function UserTable({
                 />
                 <Button
                   type="text"
+                  icon={<KeyRound className="h-4 w-4 text-amber-600" />}
+                  onClick={() => setResetPasswordUser(user)}
+                />
+                <Button
+                  type="text"
                   loading={isToggling}
                   icon={
                     user.isDisabled ? (
@@ -213,6 +229,12 @@ export function UserTable({
           </div>
         ))}
       </div>
+
+      <ResetPasswordModal
+        open={resetPasswordUser !== null}
+        onClose={() => setResetPasswordUser(null)}
+        user={resetPasswordUser}
+      />
     </>
   );
 }
