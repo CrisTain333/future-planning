@@ -56,14 +56,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const memberName = typeof payment?.userId === "object" ? (payment.userId as { fullName: string }).fullName : "Unknown";
+    const memberId = typeof payment?.userId === "object" ? (payment.userId as { _id: { toString(): string } })._id.toString() : String(payment?.userId);
     await createAuditLog("payment_edited", currentUser.userId, {
       action_description: `Edited payment for ${memberName}`,
+      member_name: memberName,
       changes: Object.entries(parsed.data).map(([key, val]) => ({
         field: key,
         from: (before as Record<string, unknown>)?.[key],
         to: val,
       })),
-    });
+    }, memberId);
 
     return NextResponse.json({ success: true, data: payment, message: "Payment updated successfully" });
   } catch (error) {
@@ -100,12 +102,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     const deleteMemberName = typeof beforeDelete?.userId === "object" ? (beforeDelete.userId as { fullName: string }).fullName : "Unknown";
+    const deleteMemberId = typeof beforeDelete?.userId === "object" ? (beforeDelete.userId as { _id: { toString(): string } })._id.toString() : String(beforeDelete?.userId);
     await createAuditLog("payment_deleted", currentUser.userId, {
       action_description: `Soft-deleted payment for ${deleteMemberName} (${MONTH_NAMES[beforeDelete?.month ? beforeDelete.month - 1 : 0]} ${beforeDelete?.year})`,
       member_name: deleteMemberName,
       amount: beforeDelete?.amount,
       receipt_no: beforeDelete?.receiptNo,
-    });
+    }, deleteMemberId);
 
     return NextResponse.json({ success: true, data: null, message: "Payment deleted successfully" });
   } catch (error) {
