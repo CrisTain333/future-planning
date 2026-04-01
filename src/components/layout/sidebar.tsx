@@ -10,6 +10,7 @@ import {
   Calculator,
   BarChart3,
   FileText,
+  Settings2,
   ScrollText,
   UserCircle,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const adminLinks = [
   { href: "/admin/accounting", label: "Accounting", icon: Calculator },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/reports", label: "Reports", icon: FileText },
+  { href: "/admin/settings", label: "Settings", icon: Settings2 },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
