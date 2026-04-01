@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { updateProfileSchema } from "@/validations/user";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -53,6 +54,14 @@ export async function PUT(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
     }
+
+    await createAuditLog("profile_updated", currentUser.userId, {
+      action_description: `Updated own profile`,
+      changes: Object.entries(parsed.data).filter(([, v]) => v !== undefined).map(([key, val]) => ({
+        field: key,
+        to: val,
+      })),
+    }, currentUser.userId);
 
     return NextResponse.json({ success: true, data: user, message: "Profile updated successfully" });
   } catch (error) {

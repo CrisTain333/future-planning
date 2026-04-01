@@ -17,10 +17,14 @@ const ACTION_LABELS: Record<string, string> = {
   user_edited: "User Edited",
   user_disabled: "User Disabled",
   user_enabled: "User Enabled",
+  user_password_reset: "Password Reset",
   notice_created: "Notice Created",
   notice_edited: "Notice Edited",
   notice_deleted: "Notice Deleted",
   settings_updated: "Settings Updated",
+  profile_updated: "Profile Updated",
+  profile_picture_updated: "Profile Picture Updated",
+  password_changed: "Password Changed",
 };
 
 const ACTION_OPTIONS = Object.entries(ACTION_LABELS).map(([value, label]) => ({
@@ -51,22 +55,38 @@ function FormattedDetails({ details }: { details: Record<string, unknown> }) {
   if (!details || Object.keys(details).length === 0) {
     return <span className="text-muted-foreground">—</span>;
   }
+
+  const { action_description, changes, timestamp, ...rest } = details;
+
   return (
-    <div className="text-xs space-y-0.5">
-      {Object.entries(details).map(([key, val]) => {
-        const label = key
-          .replace(/([A-Z])/g, " $1")
-          .replace(/_/g, " ")
-          .replace(/^\w/, (c) => c.toUpperCase());
-        const displayValue =
-          typeof val === "object" ? JSON.stringify(val) : String(val);
-        return (
-          <div key={key}>
-            <span className="font-medium text-muted-foreground">{label}:</span>{" "}
-            <span>{displayValue}</span>
-          </div>
-        );
-      })}
+    <div className="text-xs space-y-1">
+      {action_description && (
+        <p className="font-medium text-foreground">{String(action_description)}</p>
+      )}
+      {Array.isArray(changes) && changes.length > 0 && (
+        <div className="space-y-0.5 pl-2 border-l-2 border-primary/20">
+          {(changes as { field: string; from?: unknown; to?: unknown }[]).map((change, i) => (
+            <div key={i} className="text-muted-foreground">
+              <span className="font-medium capitalize">{change.field.replace(/_/g, " ")}:</span>{" "}
+              {change.from !== undefined && <><span className="line-through text-red-500">{String(change.from)}</span> &rarr; </>}
+              <span className="text-emerald-600">{String(change.to)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {Object.entries(rest).length > 0 && (
+        <div className="space-y-0.5">
+          {Object.entries(rest).map(([key, val]) => {
+            if (typeof val === "object") return null;
+            const label = key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+            return (
+              <div key={key} className="text-muted-foreground">
+                <span className="font-medium">{label}:</span> {String(val)}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

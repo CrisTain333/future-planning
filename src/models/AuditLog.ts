@@ -13,10 +13,14 @@ export interface IAuditLogDocument extends Document {
     | "user_edited"
     | "user_disabled"
     | "user_enabled"
+    | "user_password_reset"
     | "notice_created"
     | "notice_edited"
     | "notice_deleted"
-    | "settings_updated";
+    | "settings_updated"
+    | "profile_updated"
+    | "profile_picture_updated"
+    | "password_changed";
   performedBy: mongoose.Types.ObjectId;
   targetUser?: mongoose.Types.ObjectId;
   details: Record<string, unknown>;
@@ -35,10 +39,14 @@ const AuditLogSchema = new Schema<IAuditLogDocument>(
         "user_edited",
         "user_disabled",
         "user_enabled",
+        "user_password_reset",
         "notice_created",
         "notice_edited",
         "notice_deleted",
         "settings_updated",
+        "profile_updated",
+        "profile_picture_updated",
+        "password_changed",
       ],
       required: true,
     },

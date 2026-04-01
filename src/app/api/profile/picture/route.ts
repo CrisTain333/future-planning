@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { v2 as cloudinary } from "cloudinary";
+import { createAuditLog } from "@/lib/audit";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -61,6 +62,11 @@ export async function POST(req: NextRequest) {
       { profilePicture: result.secure_url },
       { new: true }
     ).select("-password");
+
+    await createAuditLog("profile_picture_updated", currentUser.userId, {
+      action_description: "Updated own profile picture",
+      picture_url: result.secure_url,
+    }, currentUser.userId);
 
     return NextResponse.json({
       success: true,

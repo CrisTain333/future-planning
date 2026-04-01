@@ -102,7 +102,16 @@ export async function POST(req: NextRequest) {
       .populate("userId", "fullName username")
       .populate("approvedBy", "fullName");
 
-    await createAuditLog("payment_created", currentUser.userId, { amount: parsed.data.amount, month: parsed.data.month, year: parsed.data.year }, parsed.data.userId);
+    const memberName = typeof populated?.userId === "object" ? (populated.userId as { fullName: string }).fullName : "Unknown";
+    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    await createAuditLog("payment_created", currentUser.userId, {
+      action_description: `Recorded payment of BDT ${parsed.data.amount.toLocaleString()} for ${memberName} (${MONTH_NAMES[parsed.data.month - 1]} ${parsed.data.year})`,
+      member_name: memberName,
+      month: `${MONTH_NAMES[parsed.data.month - 1]} ${parsed.data.year}`,
+      amount: parsed.data.amount,
+      penalty: parsed.data.penalty || 0,
+      receipt_no: payment.receiptNo,
+    }, parsed.data.userId);
 
     const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
     await createPaymentNotification(

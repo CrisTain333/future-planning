@@ -68,6 +68,8 @@ export async function PUT(
       );
     }
 
+    const before = await User.findById(id).select("-password");
+
     const updateData: Record<string, unknown> = { ...parsed.data };
 
     // If password is provided, hash it
@@ -99,7 +101,20 @@ export async function PUT(
       );
     }
 
-    await createAuditLog("user_edited", currentUser.userId, { changes: parsed.data }, id);
+    await createAuditLog("user_edited", currentUser.userId, {
+      action_description: `Edited user ${before?.fullName || id}`,
+      changes: Object.entries(parsed.data).map(([key, val]) => ({
+        field: key,
+        from: (before as Record<string, unknown>)?.[key] ?? "N/A",
+        to: val,
+      })),
+    }, id);
+
+    if (body.password) {
+      await createAuditLog("user_password_reset", currentUser.userId, {
+        action_description: `Reset password for ${before?.fullName || id}`,
+      }, id);
+    }
 
     return NextResponse.json({
       success: true,

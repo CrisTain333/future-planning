@@ -108,7 +108,13 @@ export async function POST(req: NextRequest) {
     const userObj = user.toObject();
     delete userObj.password;
 
-    await createAuditLog("user_created", currentUser.userId, { username: rest.username, role: rest.role }, user._id.toString());
+    await createAuditLog("user_created", currentUser.userId, {
+      action_description: `Created new ${rest.role} account for ${rest.username}`,
+      user_fullName: rest.fullName,
+      user_username: rest.username,
+      user_email: rest.email || "N/A",
+      user_role: rest.role,
+    }, user._id.toString());
 
     return NextResponse.json(
       { success: true, data: userObj, message: "User created successfully" },

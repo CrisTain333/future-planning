@@ -45,6 +45,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
 
+    const before = await Payment.findById(id);
+
     const payment = await Payment.findByIdAndUpdate(id, parsed.data, { new: true })
       .populate("userId", "fullName username")
       .populate("approvedBy", "fullName");
@@ -53,7 +55,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Payment not found" }, { status: 404 });
     }
 
-    await createAuditLog("payment_edited", currentUser.userId, { changes: parsed.data }, id);
+    const memberName = typeof payment?.userId === "object" ? (payment.userId as { fullName: string }).fullName : "Unknown";
+    await createAuditLog("payment_edited", currentUser.userId, {
+      action_description: `Edited payment for ${memberName}`,
+      changes: Object.entries(parsed.data).map(([key, val]) => ({
+        field: key,
+        from: (before as Record<string, unknown>)?.[key],
+        to: val,
+      })),
+    });
 
     return NextResponse.json({ success: true, data: payment, message: "Payment updated successfully" });
   } catch (error) {
@@ -71,6 +81,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     await dbConnect();
     const { id } = await params;
+    const beforeDelete = await Payment.findById(id).populate("userId", "fullName");
+
     const payment = await Payment.findByIdAndUpdate(
       id,
       {
@@ -86,7 +98,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ success: false, error: "Payment not found" }, { status: 404 });
     }
 
-    await createAuditLog("payment_deleted", currentUser.userId, { paymentId: id });
+    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const deleteMemberName = typeof beforeDelete?.userId === "object" ? (beforeDelete.userId as { fullName: string }).fullName : "Unknown";
+    await createAuditLog("payment_deleted", currentUser.userId, {
+      action_description: `Soft-deleted payment for ${deleteMemberName} (${MONTH_NAMES[beforeDelete?.month ? beforeDelete.month - 1 : 0]} ${beforeDelete?.year})`,
+      member_name: deleteMemberName,
+      amount: beforeDelete?.amount,
+      receipt_no: beforeDelete?.receiptNo,
+    });
 
     return NextResponse.json({ success: true, data: null, message: "Payment deleted successfully" });
   } catch (error) {

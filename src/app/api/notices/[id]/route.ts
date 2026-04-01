@@ -41,12 +41,21 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
 
+    const before = await Notice.findById(id);
+
     const notice = await Notice.findByIdAndUpdate(id, parsed.data, { new: true }).populate("createdBy", "fullName");
     if (!notice) {
       return NextResponse.json({ success: false, error: "Notice not found" }, { status: 404 });
     }
 
-    await createAuditLog("notice_edited", currentUser.userId, { changes: parsed.data });
+    await createAuditLog("notice_edited", currentUser.userId, {
+      action_description: `Edited notice: "${before?.title || id}"`,
+      changes: Object.entries(parsed.data).filter(([, v]) => v !== undefined).map(([key, val]) => ({
+        field: key,
+        from: (before as Record<string, unknown>)?.[key],
+        to: val,
+      })),
+    });
 
     return NextResponse.json({ success: true, data: notice, message: "Notice updated successfully" });
   } catch (error) {
@@ -64,12 +73,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     await dbConnect();
     const { id } = await params;
+    const beforeNotice = await Notice.findById(id);
+
     const notice = await Notice.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
     if (!notice) {
       return NextResponse.json({ success: false, error: "Notice not found" }, { status: 404 });
     }
 
-    await createAuditLog("notice_deleted", currentUser.userId, { noticeId: id });
+    await createAuditLog("notice_deleted", currentUser.userId, {
+      action_description: `Deleted notice: "${beforeNotice?.title || id}"`,
+      notice_title: beforeNotice?.title,
+    });
 
     return NextResponse.json({ success: true, data: null, message: "Notice deleted successfully" });
   } catch (error) {

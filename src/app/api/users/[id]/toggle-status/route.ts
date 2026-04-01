@@ -50,7 +50,18 @@ export async function PATCH(
     const userObj = user.toObject();
     delete userObj.password;
 
-    await createAuditLog(user.isDisabled ? "user_disabled" : "user_enabled", currentUser.userId, {}, id);
+    await createAuditLog(
+      user.isDisabled ? "user_disabled" : "user_enabled",
+      currentUser.userId,
+      {
+        action_description: `${user.isDisabled ? "Disabled" : "Enabled"} user ${user.fullName}`,
+        user_fullName: user.fullName,
+        user_username: user.username,
+        previous_status: user.isDisabled ? "Active" : "Disabled",
+        new_status: user.isDisabled ? "Disabled" : "Active",
+      },
+      id
+    );
 
     return NextResponse.json({
       success: true,

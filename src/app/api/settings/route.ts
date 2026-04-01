@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Settings from "@/models/Settings";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -34,7 +35,17 @@ export async function PUT(req: NextRequest) {
     await dbConnect();
     const body = await req.json();
 
+    const before = await Settings.findOne({});
     const settings = await Settings.findOneAndUpdate({}, body, { new: true, upsert: true });
+
+    await createAuditLog("settings_updated", currentUser.userId, {
+      action_description: "Updated application settings",
+      changes: Object.entries(body).filter(([key]) => (before as Record<string, unknown>)?.[key] !== body[key]).map(([key, val]) => ({
+        field: key,
+        from: (before as Record<string, unknown>)?.[key],
+        to: val,
+      })),
+    });
 
     return NextResponse.json({ success: true, data: settings, message: "Settings updated successfully" });
   } catch (error) {

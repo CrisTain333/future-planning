@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import { changePasswordSchema } from "@/validations/user";
 import bcrypt from "bcryptjs";
+import { createAuditLog } from "@/lib/audit";
 
 export async function PUT(req: NextRequest) {
   try {
@@ -32,6 +33,10 @@ export async function PUT(req: NextRequest) {
 
     user.password = await bcrypt.hash(parsed.data.newPassword, 10);
     await user.save();
+
+    await createAuditLog("password_changed", currentUser.userId, {
+      action_description: "Changed own password",
+    }, currentUser.userId);
 
     return NextResponse.json({ success: true, data: null, message: "Password changed successfully" });
   } catch (error) {

@@ -55,7 +55,11 @@ export async function POST(req: NextRequest) {
     const notice = await Notice.create({ ...parsed.data, createdBy: currentUser.userId });
     const populated = await Notice.findById(notice._id).populate("createdBy", "fullName");
 
-    await createAuditLog("notice_created", currentUser.userId, { title: parsed.data.title });
+    await createAuditLog("notice_created", currentUser.userId, {
+      action_description: `Created notice: "${parsed.data.title}"`,
+      notice_title: parsed.data.title,
+      notice_body_preview: parsed.data.body.substring(0, 100),
+    });
     await createNoticeNotification(notice._id.toString(), parsed.data.title);
 
     return NextResponse.json({ success: true, data: populated, message: "Notice created successfully" }, { status: 201 });
