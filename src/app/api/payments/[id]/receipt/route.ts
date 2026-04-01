@@ -118,9 +118,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       ["Approved By", approvedByName],
     );
 
-    if (payment.note) {
-      rows.push(["Note", payment.note]);
-    }
 
     // Draw table
     for (let i = 0; i < rows.length; i++) {
