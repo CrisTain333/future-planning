@@ -93,7 +93,7 @@ export default function AccountingPage() {
       <div className="glass-card rounded-xl p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
-          <div className="flex-1">
+          <div className="sm:w-64">
             <Input
               placeholder="Search by name or receipt no..."
               prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
