@@ -64,7 +64,7 @@ export function Header() {
       <div className="flex items-center gap-2">
         <NotificationBell />
 
-        <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" overlayClassName="w-56">
+        <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" classNames={{ root: "w-56" }}>
           <div className="relative h-8 w-8 rounded-full cursor-pointer">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">

@@ -121,7 +121,7 @@ export function NotificationBell() {
   ];
 
   return (
-    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" overlayClassName="w-80">
+    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" classNames={{ root: "w-80" }}>
       <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer outline-none">
         <Bell className="h-5 w-5" />
         {hasUnread && (
