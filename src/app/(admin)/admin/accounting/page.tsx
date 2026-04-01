@@ -7,7 +7,8 @@ import { IPayment, IUser } from "@/types";
 import { PaymentTable } from "@/components/accounting/payment-table";
 import { PaymentFormModal } from "@/components/accounting/payment-form-modal";
 import { Button, Input, Select, Pagination } from "antd";
-import { PlusIcon, Calculator } from "lucide-react";
+import { PlusIcon, Calculator, SearchIcon } from "lucide-react";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const MONTH_FILTER_OPTIONS = [
   { value: 1, label: "January" },
@@ -27,6 +28,8 @@ const MONTH_FILTER_OPTIONS = [
 export default function AccountingPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 400);
   const [filterUserId, setFilterUserId] = useState<string>("");
   const [filterMonth, setFilterMonth] = useState<number | "">("");
   const [filterYear, setFilterYear] = useState<number | "">(
@@ -42,6 +45,7 @@ export default function AccountingPage() {
   const { data: paymentsData, isLoading } = useGetPaymentsQuery({
     page,
     limit,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(filterUserId ? { userId: filterUserId } : {}),
     ...(filterMonth ? { month: filterMonth } : {}),
     ...(filterYear ? { year: filterYear } : {}),
@@ -86,10 +90,22 @@ export default function AccountingPage() {
       </div>
 
       {/* Filters Card */}
-      <div className="glass-card rounded-xl p-4 lg:p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="glass-card rounded-xl p-4 lg:p-6 mb-6 space-y-4">
+        {/* Search bar */}
+        <div>
+          <Input
+            placeholder="Search by member name or receipt no..."
+            prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            allowClear
+            size="large"
+          />
+        </div>
+        {/* Filter dropdowns */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Filter by Member</label>
+            <label className="text-sm font-medium text-muted-foreground">Member</label>
             <Select
               className="w-full bg-white/50"
               value={filterUserId || undefined}
@@ -109,7 +125,7 @@ export default function AccountingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Filter by Month</label>
+            <label className="text-sm font-medium text-muted-foreground">Month</label>
             <Select
               className="w-full bg-white/50"
               value={filterMonth || undefined}
@@ -126,7 +142,7 @@ export default function AccountingPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-muted-foreground">Filter by Year</label>
+            <label className="text-sm font-medium text-muted-foreground">Year</label>
             <Input
               type="number"
               className="w-full bg-white/50"

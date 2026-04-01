@@ -60,6 +60,14 @@ export function PaymentTable({
       ),
     },
     {
+      title: 'Receipt No',
+      dataIndex: 'receiptNo',
+      key: 'receiptNo',
+      render: (val: string) => (
+        <span className="font-mono text-xs text-primary">{val}</span>
+      ),
+    },
+    {
       title: 'Month',
       key: 'month',
       render: (_, record) => `${MONTH_NAMES[record.month - 1]} ${record.year}`,

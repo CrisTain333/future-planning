@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get("userId") || "";
     const month = searchParams.get("month") || "";
     const year = searchParams.get("year") || "";
+    const search = searchParams.get("search") || "";
 
     const query: Record<string, unknown> = { isDeleted: false };
 
@@ -29,17 +30,44 @@ export async function GET(req: NextRequest) {
     if (month) query.month = parseInt(month);
     if (year) query.year = parseInt(year);
 
-    const total = await Payment.countDocuments(query);
-    const payments = await Payment.find(query)
+    // Search by receipt number directly
+    if (search) {
+      query.receiptNo = { $regex: search, $options: "i" };
+    }
+
+    // First get payments matching the query
+    let payments = await Payment.find(query)
       .populate("userId", "fullName username")
       .populate("approvedBy", "fullName")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+      .sort({ createdAt: -1 });
+
+    // If searching and no receipt match, try searching by member name
+    if (search && payments.length === 0) {
+      delete query.receiptNo;
+      const User = (await import("@/models/User")).default;
+      const matchingUsers = await User.find({
+        $or: [
+          { fullName: { $regex: search, $options: "i" } },
+          { username: { $regex: search, $options: "i" } },
+        ],
+      }).select("_id");
+      const userIds = matchingUsers.map((u) => u._id);
+      if (userIds.length > 0) {
+        query.userId = { $in: userIds };
+      }
+      payments = await Payment.find(query)
+        .populate("userId", "fullName username")
+        .populate("approvedBy", "fullName")
+        .sort({ createdAt: -1 });
+    }
+
+    // Apply pagination manually after search
+    const total = payments.length;
+    const paginatedPayments = payments.slice((page - 1) * limit, page * limit);
 
     return NextResponse.json({
       success: true,
-      data: payments,
+      data: paginatedPayments,
       pagination: {
         page,
         limit,

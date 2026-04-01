@@ -7,6 +7,7 @@ interface GetPaymentsParams {
   userId?: string;
   month?: number;
   year?: number;
+  search?: string;
 }
 
 interface CreatePaymentBody {

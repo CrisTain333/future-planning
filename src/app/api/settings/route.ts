@@ -40,9 +40,9 @@ export async function PUT(req: NextRequest) {
 
     await createAuditLog("settings_updated", currentUser.userId, {
       action_description: "Updated application settings",
-      changes: Object.entries(body).filter(([key]) => (before as Record<string, unknown>)?.[key] !== body[key]).map(([key, val]) => ({
+      changes: Object.entries(body).filter(([key]) => (before as unknown as Record<string, unknown>)?.[key] !== body[key]).map(([key, val]) => ({
         field: key,
-        from: (before as Record<string, unknown>)?.[key],
+        from: (before as unknown as Record<string, unknown>)?.[key],
         to: val,
       })),
     });
