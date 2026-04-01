@@ -3,10 +3,28 @@
 import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useGetSettingsQuery, useUpdateSettingsMutation } from "@/store/settings-api";
-import { Input, Button, Select } from "antd";
+import { Input, Button, Select, Modal, Tag } from "antd";
 import { Skeleton } from "@/components/ui/skeleton";
 import toast from "react-hot-toast";
 import { Settings } from "lucide-react";
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function generateMonths(startMonth: number, startYear: number) {
+  const months: { month: number; year: number }[] = [];
+  const now = new Date();
+  const futureMonth = now.getMonth() + 13; // 12 months ahead
+  const futureYear = now.getFullYear() + Math.floor(futureMonth / 12);
+  const endMonth = futureMonth % 12 || 12;
+
+  let m = startMonth, y = startYear;
+  while (y < futureYear || (y === futureYear && m <= endMonth)) {
+    months.push({ month: m, year: y });
+    m++;
+    if (m > 12) { m = 1; y++; }
+  }
+  return months;
+}
 
 const MONTHS = [
   { value: 1, label: "January" },
@@ -154,6 +172,96 @@ export default function SettingsPage() {
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* Collection Calendar */}
+      {data?.data && (
+        <CollectionCalendar
+          startMonth={data.data.startMonth}
+          startYear={data.data.startYear}
+          skippedMonths={data.data.skippedMonths || []}
+          updateSettings={updateSettings}
+        />
+      )}
+    </div>
+  );
+}
+
+function CollectionCalendar({
+  startMonth,
+  startYear,
+  skippedMonths,
+  updateSettings,
+}: {
+  startMonth: number;
+  startYear: number;
+  skippedMonths: { month: number; year: number; reason?: string }[];
+  updateSettings: ReturnType<typeof useUpdateSettingsMutation>[0];
+}) {
+  const months = generateMonths(startMonth, startYear);
+
+  const handleSkip = (mo: { month: number; year: number }) => {
+    Modal.confirm({
+      title: `Skip ${MONTH_NAMES[mo.month - 1]} ${mo.year}?`,
+      content: (
+        <div>
+          <p>No payments will be expected for this month.</p>
+          <Input placeholder="Reason (optional)" id="skip-reason" className="mt-2" />
+        </div>
+      ),
+      onOk: async () => {
+        const reason = (document.getElementById("skip-reason") as HTMLInputElement)?.value || "";
+        const updated = [...skippedMonths, { month: mo.month, year: mo.year, ...(reason ? { reason } : {}) }];
+        await updateSettings({ skippedMonths: updated }).unwrap();
+        toast.success(`${MONTH_NAMES[mo.month - 1]} ${mo.year} marked as skipped`);
+      },
+    });
+  };
+
+  const handleUnskip = (mo: { month: number; year: number }) => {
+    Modal.confirm({
+      title: `Resume collection for ${MONTH_NAMES[mo.month - 1]} ${mo.year}?`,
+      onOk: async () => {
+        const updated = skippedMonths.filter(s => !(s.month === mo.month && s.year === mo.year));
+        await updateSettings({ skippedMonths: updated }).unwrap();
+        toast.success(`${MONTH_NAMES[mo.month - 1]} ${mo.year} collection resumed`);
+      },
+    });
+  };
+
+  return (
+    <div className="glass-card rounded-xl overflow-hidden">
+      <div className="p-6 border-b border-white/20">
+        <h2 className="text-lg font-semibold">Collection Calendar</h2>
+        <p className="text-sm text-muted-foreground">Mark months where collection is skipped</p>
+      </div>
+      <div className="p-6">
+        <div className="flex flex-wrap gap-2">
+          {months.map(mo => {
+            const isSkipped = skippedMonths.some(s => s.month === mo.month && s.year === mo.year);
+            const skippedInfo = skippedMonths.find(s => s.month === mo.month && s.year === mo.year);
+
+            return (
+              <Tag
+                key={`${mo.month}-${mo.year}`}
+                className={`cursor-pointer m-1 px-3 py-1 text-sm ${
+                  isSkipped
+                    ? "bg-gray-200 text-gray-500 line-through border-gray-300"
+                    : "bg-primary/10 text-primary border-primary/30"
+                }`}
+                onClick={() => isSkipped ? handleUnskip(mo) : handleSkip(mo)}
+              >
+                {MONTH_NAMES[mo.month - 1]} {mo.year}
+                {isSkipped && skippedInfo?.reason && ` (${skippedInfo.reason})`}
+              </Tag>
+            );
+          })}
+        </div>
+        {skippedMonths.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-4">
+            {skippedMonths.length} month(s) skipped
+          </p>
+        )}
       </div>
     </div>
   );

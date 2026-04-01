@@ -6,6 +6,7 @@ export interface ISettingsDocument extends Document {
   initialAmount: number;
   startMonth: number;
   startYear: number;
+  skippedMonths: { month: number; year: number; reason?: string }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +18,12 @@ const SettingsSchema = new Schema<ISettingsDocument>(
     initialAmount: { type: Number, default: 10000 },
     startMonth: { type: Number, default: 3 },
     startYear: { type: Number, default: 2026 },
+    skippedMonths: [{
+      month: { type: Number, required: true },
+      year: { type: Number, required: true },
+      reason: { type: String },
+      _id: false,
+    }],
   },
   { timestamps: true }
 );

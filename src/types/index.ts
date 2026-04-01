@@ -81,6 +81,7 @@ export interface ISettings {
   initialAmount: number;
   startMonth: number;
   startYear: number;
+  skippedMonths?: { month: number; year: number; reason?: string }[];
   createdAt: string;
   updatedAt: string;
 }
