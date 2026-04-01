@@ -2,7 +2,8 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { LogOut, UserCircle } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useGetProfileQuery } from "@/store/profile-api";
 import { Dropdown } from "antd";
 import type { MenuProps } from "antd";
 import { MobileSidebar } from "./sidebar";
@@ -11,6 +12,8 @@ import Link from "next/link";
 
 export function Header() {
   const { data: session } = useSession();
+  const { data: profileData } = useGetProfileQuery();
+  const profilePicture = profileData?.data?.profilePicture;
   const fullName = (session?.user as { fullName?: string })?.fullName || "User";
   const initials = fullName
     .split(" ")
@@ -67,6 +70,7 @@ export function Header() {
         <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight" classNames={{ root: "w-56" }}>
           <div className="relative h-8 w-8 rounded-full cursor-pointer">
             <Avatar className="h-8 w-8">
+              {profilePicture && <AvatarImage src={profilePicture} alt={fullName} />}
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {initials}
               </AvatarFallback>
