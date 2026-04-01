@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import User from "@/models/User";
 import Settings from "@/models/Settings";
+import { isMonthSkipped } from "@/lib/skip-months";
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,12 +58,16 @@ export async function GET(req: NextRequest) {
 
     const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+    const isSkipped = isMonthSkipped(month, year, settings.skippedMonths || []);
+
     return NextResponse.json({
       success: true,
       data: {
         month,
         year,
         monthName: `${MONTH_NAMES[month - 1]} ${year}`,
+        isSkipped,
+        skipReason: isSkipped ? (settings.skippedMonths || []).find((s: { month: number; year: number; reason?: string }) => s.month === month && s.year === year)?.reason : undefined,
         totalMembers: allMembers.length,
         paidCount: payments.length,
         unpaidCount: unpaidMembers.length,

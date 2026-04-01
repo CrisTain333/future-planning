@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import User from "@/models/User";
 import Settings from "@/models/Settings";
+import { countExpectedMonths, isMonthSkipped } from "@/lib/skip-months";
 
 export async function GET() {
   try {
@@ -25,17 +26,19 @@ export async function GET() {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    let expectedMonths = 0;
-    let m = settings.startMonth;
-    let y = settings.startYear;
-    while (y < currentYear || (y === currentYear && m <= currentMonth)) {
-      expectedMonths++;
-      m++;
-      if (m > 12) { m = 1; y++; }
-    }
+    const skippedMonths = settings.skippedMonths || [];
+    const expectedMonths = countExpectedMonths(
+      settings.startMonth, settings.startYear,
+      currentMonth, currentYear,
+      skippedMonths
+    );
 
     // Total expected = initial + (remaining months * monthly) per member
-    const totalExpected = totalMembers * (settings.initialAmount + (expectedMonths - 1) * settings.monthlyAmount);
+    const initialSkipped = isMonthSkipped(settings.startMonth, settings.startYear, skippedMonths);
+    const totalExpected = totalMembers * (
+      (initialSkipped ? 0 : settings.initialAmount) +
+      (expectedMonths - (initialSkipped ? 0 : 1)) * settings.monthlyAmount
+    );
 
     // Total collected
     const fundResult = await Payment.aggregate([

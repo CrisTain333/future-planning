@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import User from "@/models/User";
+import Settings from "@/models/Settings";
+import { isMonthSkipped } from "@/lib/skip-months";
 
 export async function GET() {
   try {
@@ -52,16 +54,23 @@ export async function GET() {
     };
 
     // Overdue: members who haven't paid current month
-    const paidThisMonth = await Payment.distinct("userId", {
-      month: currentMonth,
-      year: currentYear,
-      isDeleted: false,
-      status: "approved",
-    });
-    const overdueCount = await User.countDocuments({
-      isDisabled: false,
-      _id: { $nin: paidThisMonth },
-    });
+    const settings = await Settings.findOne({});
+    const skippedMonths = settings?.skippedMonths || [];
+    const currentMonthSkipped = isMonthSkipped(currentMonth, currentYear, skippedMonths);
+
+    let overdueCount = 0;
+    if (!currentMonthSkipped) {
+      const paidThisMonth = await Payment.distinct("userId", {
+        month: currentMonth,
+        year: currentYear,
+        isDeleted: false,
+        status: "approved",
+      });
+      overdueCount = await User.countDocuments({
+        isDisabled: false,
+        _id: { $nin: paidThisMonth },
+      });
+    }
 
     // Fund growth chart: cumulative total by month
     const fundGrowthRaw = await Payment.aggregate([

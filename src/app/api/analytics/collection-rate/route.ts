@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import User from "@/models/User";
 import Settings from "@/models/Settings";
+import { isMonthSkipped } from "@/lib/skip-months";
 
 export async function GET() {
   try {
@@ -37,19 +38,21 @@ export async function GET() {
       countMap.set(`${pc._id.month}-${pc._id.year}`, pc.count);
     }
 
-    const data: { label: string; month: number; year: number; paid: number; total: number; rate: number }[] = [];
+    const skippedMonths = settings.skippedMonths || [];
+    const data: { label: string; month: number; year: number; paid: number; total: number; rate: number; skipped: boolean }[] = [];
     let m = settings.startMonth;
     let y = settings.startYear;
     while (y < currentYear || (y === currentYear && m <= currentMonth)) {
       const paid = countMap.get(`${m}-${y}`) || 0;
-      const rate = totalMembers > 0 ? Math.round((paid / totalMembers) * 100) : 0;
+      const skipped = isMonthSkipped(m, y, skippedMonths);
       data.push({
         label: `${MONTH_NAMES[m - 1]} '${String(y).slice(-2)}`,
         month: m,
         year: y,
         paid,
-        total: totalMembers,
-        rate,
+        total: skipped ? 0 : totalMembers,
+        rate: skipped ? -1 : (totalMembers > 0 ? Math.round((paid / totalMembers) * 100) : 0),
+        skipped,
       });
       m++;
       if (m > 12) { m = 1; y++; }

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import Settings from "@/models/Settings";
+import { countExpectedMonths } from "@/lib/skip-months";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -35,14 +36,12 @@ export async function GET() {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    let expectedMonths = 0;
-    let y = settings.startYear;
-    let m = settings.startMonth;
-    while (y < currentYear || (y === currentYear && m <= currentMonth)) {
-      expectedMonths++;
-      m++;
-      if (m > 12) { m = 1; y++; }
-    }
+    const skippedMonths = settings.skippedMonths || [];
+    const expectedMonths = countExpectedMonths(
+      settings.startMonth, settings.startYear,
+      currentMonth, currentYear,
+      skippedMonths
+    );
 
     const monthsDue = expectedMonths - monthsPaid;
     const outstanding = monthsDue > 0 ? monthsDue * settings.monthlyAmount : 0;

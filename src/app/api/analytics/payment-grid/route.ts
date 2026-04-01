@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import Payment from "@/models/Payment";
 import User from "@/models/User";
 import Settings from "@/models/Settings";
+import { isMonthSkipped } from "@/lib/skip-months";
 
 export async function GET() {
   try {
@@ -26,12 +27,13 @@ export async function GET() {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
-    const months: { month: number; year: number; label: string }[] = [];
+    const skippedMonths = settings.skippedMonths || [];
+    const months: { month: number; year: number; label: string; skipped: boolean }[] = [];
     const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     let m = settings.startMonth;
     let y = settings.startYear;
     while (y < currentYear || (y === currentYear && m <= currentMonth)) {
-      months.push({ month: m, year: y, label: `${MONTH_NAMES[m - 1]} ${y}` });
+      months.push({ month: m, year: y, label: `${MONTH_NAMES[m - 1]} ${y}`, skipped: isMonthSkipped(m, y, skippedMonths) });
       m++;
       if (m > 12) { m = 1; y++; }
     }
@@ -52,6 +54,7 @@ export async function GET() {
       cells: months.map((mo) => {
         const key = `${member._id.toString()}-${mo.month}-${mo.year}`;
         const payment = paymentMap.get(key);
+        if (isMonthSkipped(mo.month, mo.year, skippedMonths) && !payment) return "skipped";
         if (!payment) return "unpaid";
         return payment.penalty ? "paid_penalty" : "paid";
       }),
