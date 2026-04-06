@@ -86,6 +86,18 @@ export interface ISettings {
   updatedAt: string;
 }
 
+export interface IEmailLog {
+  _id: string;
+  to: string;
+  toUserId?: string | IUser;
+  type: "payment_reminder" | "payment_receipt" | "notice" | "password_changed";
+  subject: string;
+  status: "sent" | "failed";
+  error?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
