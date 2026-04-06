@@ -4,6 +4,8 @@ type AuditAction =
   | "payment_created"
   | "payment_edited"
   | "payment_deleted"
+  | "payment_archived"
+  | "payment_unarchived"
   | "user_created"
   | "user_edited"
   | "user_disabled"

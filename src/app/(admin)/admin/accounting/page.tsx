@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useGetPaymentsQuery } from "@/store/payments-api";
+import { useState, useEffect } from "react";
+import { useGetPaymentsQuery, useArchivePaymentMutation, useUnarchivePaymentMutation } from "@/store/payments-api";
 import { useGetUsersQuery } from "@/store/users-api";
 import { IPayment, IUser } from "@/types";
 import { PaymentTable } from "@/components/accounting/payment-table";
 import { PaymentFormModal } from "@/components/accounting/payment-form-modal";
+import { BulkEditModal } from "@/components/accounting/bulk-edit-modal";
 import { Button, Input, Select, Pagination } from "antd";
-import { PlusIcon, Calculator, SearchIcon } from "lucide-react";
+import { PlusIcon, Calculator, SearchIcon, PencilIcon, ArchiveIcon, ArchiveRestoreIcon } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
+import toast from "react-hot-toast";
 
 const MONTH_FILTER_OPTIONS = [
   { value: 1, label: "January" },
@@ -36,8 +38,17 @@ export default function AccountingPage() {
     new Date().getFullYear()
   );
 
+  const [activeTab, setActiveTab] = useState<"active" | "archived">("active");
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<IPayment | null>(null);
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<IPayment[]>([]);
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+
+  const [archivePayment] = useArchivePaymentMutation();
+  const [unarchivePayment] = useUnarchivePaymentMutation();
 
   const { data: usersData } = useGetUsersQuery({ page: 1, limit: 100 });
   const users = usersData?.data ?? [];
@@ -45,6 +56,7 @@ export default function AccountingPage() {
   const { data: paymentsData, isLoading, isFetching } = useGetPaymentsQuery({
     page,
     limit,
+    status: activeTab === "archived" ? "archived" : "approved",
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
     ...(filterUserId ? { userId: filterUserId } : {}),
     ...(filterMonth ? { month: filterMonth } : {}),
@@ -53,6 +65,77 @@ export default function AccountingPage() {
 
   const payments = paymentsData?.data ?? [];
   const pagination = paymentsData?.pagination;
+
+  const clearSelection = () => {
+    setSelectedRowKeys([]);
+    setSelectedRows([]);
+  };
+
+  useEffect(() => {
+    clearSelection();
+  }, [page, limit, debouncedSearch, filterUserId, filterMonth, filterYear, activeTab]);
+
+  const handleArchive = async (payment: IPayment) => {
+    try {
+      await archivePayment(payment._id).unwrap();
+      toast.success("Payment archived");
+    } catch {
+      toast.error("Failed to archive payment");
+    }
+  };
+
+  const handleUnarchive = async (payment: IPayment) => {
+    try {
+      await unarchivePayment(payment._id).unwrap();
+      toast.success("Payment unarchived");
+    } catch {
+      toast.error("Failed to unarchive payment");
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const payment of selectedRows) {
+      try {
+        await archivePayment(payment._id).unwrap();
+        successCount++;
+      } catch {
+        const name = payment.userId && typeof payment.userId === "object"
+          ? (payment.userId as { fullName: string }).fullName : "Unknown";
+        failures.push(`Failed to archive payment for ${name}`);
+      }
+    }
+    if (failures.length === 0) {
+      toast.success(`Archived ${successCount} record${successCount !== 1 ? "s" : ""}`);
+    } else {
+      toast.success(`Archived ${successCount} of ${selectedRows.length} records`);
+      failures.forEach((msg) => toast.error(msg));
+    }
+    clearSelection();
+  };
+
+  const handleBulkUnarchive = async () => {
+    let successCount = 0;
+    const failures: string[] = [];
+    for (const payment of selectedRows) {
+      try {
+        await unarchivePayment(payment._id).unwrap();
+        successCount++;
+      } catch {
+        const name = payment.userId && typeof payment.userId === "object"
+          ? (payment.userId as { fullName: string }).fullName : "Unknown";
+        failures.push(`Failed to unarchive payment for ${name}`);
+      }
+    }
+    if (failures.length === 0) {
+      toast.success(`Unarchived ${successCount} record${successCount !== 1 ? "s" : ""}`);
+    } else {
+      toast.success(`Unarchived ${successCount} of ${selectedRows.length} records`);
+      failures.forEach((msg) => toast.error(msg));
+    }
+    clearSelection();
+  };
 
   const handleEdit = (payment: IPayment) => {
     setEditingPayment(payment);
@@ -142,10 +225,24 @@ export default function AccountingPage() {
 
       {/* Table Card */}
       <div className="glass-card rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-white/20">
+        <div className="p-4 border-b border-white/20 flex items-center justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">
-            {pagination?.total ?? 0} total payments
+            {pagination?.total ?? 0} {activeTab === "archived" ? "archived" : "total"} payments
           </h2>
+          <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+            <button
+              onClick={() => { setActiveTab("active"); setPage(1); }}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${activeTab === "active" ? "bg-card shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => { setActiveTab("archived"); setPage(1); }}
+              className={`px-3 py-1 text-sm rounded-md transition-colors ${activeTab === "archived" ? "bg-card shadow-sm font-medium" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              Archived
+            </button>
+          </div>
         </div>
         <div className="table-container relative">
           {isFetching && !isLoading && (
@@ -168,7 +265,15 @@ export default function AccountingPage() {
               payments={payments}
               page={page}
               limit={limit}
+              mode={activeTab}
               onEdit={handleEdit}
+              onArchive={handleArchive}
+              onUnarchive={handleUnarchive}
+              selectedRowKeys={selectedRowKeys}
+              onSelectionChange={(keys, rows) => {
+                setSelectedRowKeys(keys);
+                setSelectedRows(rows);
+              }}
             />
           )}
         </div>
@@ -197,6 +302,60 @@ export default function AccountingPage() {
         onOpenChange={setModalOpen}
         payment={editingPayment}
       />
+
+      {/* Bulk edit modal */}
+      <BulkEditModal
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        selectedPayments={selectedRows}
+        onComplete={() => {
+          setSelectedRowKeys([]);
+          setSelectedRows([]);
+        }}
+      />
+
+      {/* Floating action bar */}
+      {selectedRowKeys.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-3 rounded-xl bg-card border shadow-lg px-5 py-3">
+            <span className="text-sm font-medium">
+              {selectedRowKeys.length} selected
+            </span>
+            {activeTab === "active" ? (
+              <>
+                <Button
+                  type="primary"
+                  icon={<PencilIcon className="h-4 w-4" />}
+                  onClick={() => setBulkEditOpen(true)}
+                >
+                  Bulk Edit
+                </Button>
+                <Button
+                  icon={<ArchiveIcon className="h-4 w-4" />}
+                  onClick={handleBulkArchive}
+                >
+                  Bulk Archive
+                </Button>
+              </>
+            ) : (
+              <Button
+                type="primary"
+                icon={<ArchiveRestoreIcon className="h-4 w-4" />}
+                onClick={handleBulkUnarchive}
+              >
+                Bulk Unarchive
+              </Button>
+            )}
+            <Button
+              size="small"
+              type="text"
+              onClick={clearSelection}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -102,7 +102,7 @@ export function PaymentFormModal({
       if (isEdit) {
         await updatePayment({
           id: payment._id,
-          body: { amount, penalty, penaltyReason, note },
+          body: { month, year, amount, penalty, penaltyReason, note },
         }).unwrap();
         toast.success("Payment updated successfully");
       } else {
@@ -122,8 +122,9 @@ export function PaymentFormModal({
         toast.success("Payment recorded successfully");
       }
       onOpenChange(false);
-    } catch {
-      toast.error(isEdit ? "Failed to update payment" : "Failed to record payment");
+    } catch (err: unknown) {
+      const message = (err as { data?: { error?: string } })?.data?.error;
+      toast.error(message || (isEdit ? "Failed to update payment" : "Failed to record payment"));
     }
   };
 
@@ -177,20 +178,13 @@ export function PaymentFormModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="month">Month</label>
-            {isEdit ? (
-              <Input
-                value={MONTH_OPTIONS[payment.month - 1]?.label}
-                disabled
-              />
-            ) : (
-              <Select
-                className="w-full"
-                value={month}
-                onChange={(val: number) => setMonth(val)}
-                placeholder="Month"
-                options={MONTH_OPTIONS}
-              />
-            )}
+            <Select
+              className="w-full"
+              value={month}
+              onChange={(val: number) => setMonth(val)}
+              placeholder="Month"
+              options={MONTH_OPTIONS}
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="year">Year</label>
@@ -199,7 +193,6 @@ export function PaymentFormModal({
               type="number"
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              disabled={isEdit}
               min={2020}
               max={2100}
             />

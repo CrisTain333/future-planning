@@ -13,11 +13,13 @@ export interface IPaymentDocument extends Document {
   penaltyReason?: string;
   note?: string;
   receiptNo: string;
-  status: "approved" | "deleted";
+  status: "approved" | "deleted" | "archived";
   approvedBy: mongoose.Types.ObjectId;
   isDeleted: boolean;
   deletedBy?: mongoose.Types.ObjectId;
   deletedAt?: Date;
+  archivedBy?: mongoose.Types.ObjectId;
+  archivedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,11 +34,13 @@ const PaymentSchema = new Schema<IPaymentDocument>(
     penaltyReason: { type: String },
     note: { type: String },
     receiptNo: { type: String, required: true, unique: true },
-    status: { type: String, enum: ["approved", "deleted"], default: "approved" },
+    status: { type: String, enum: ["approved", "deleted", "archived"], default: "approved" },
     approvedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     isDeleted: { type: Boolean, default: false },
     deletedBy: { type: Schema.Types.ObjectId, ref: "User" },
     deletedAt: { type: Date },
+    archivedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    archivedAt: { type: Date },
   },
   { timestamps: true }
 );

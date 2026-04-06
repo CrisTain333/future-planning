@@ -8,6 +8,7 @@ interface GetPaymentsParams {
   month?: number;
   year?: number;
   search?: string;
+  status?: string;
 }
 
 interface CreatePaymentBody {
@@ -21,6 +22,8 @@ interface CreatePaymentBody {
 }
 
 interface UpdatePaymentBody {
+  month?: number;
+  year?: number;
   amount?: number;
   penalty?: number;
   penaltyReason?: string;
@@ -67,6 +70,20 @@ export const paymentsApi = api.injectEndpoints({
       query: (id) => `/payments/${id}/history`,
       providesTags: ["AuditLogs"],
     }),
+    archivePayment: builder.mutation<ApiResponse<IPayment>, string>({
+      query: (id) => ({
+        url: `/payments/${id}/archive`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Payments", "Dashboard"],
+    }),
+    unarchivePayment: builder.mutation<ApiResponse<IPayment>, string>({
+      query: (id) => ({
+        url: `/payments/${id}/unarchive`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Payments", "Dashboard"],
+    }),
   }),
 });
 
@@ -77,4 +94,6 @@ export const {
   useUpdatePaymentMutation,
   useDeletePaymentMutation,
   useGetPaymentHistoryQuery,
+  useArchivePaymentMutation,
+  useUnarchivePaymentMutation,
 } = paymentsApi;

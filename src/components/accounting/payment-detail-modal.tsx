@@ -106,7 +106,9 @@ export function PaymentDetailModal({ open, onClose, payment }: PaymentDetailModa
 
                 const color = action === "payment_created" ? "green"
                   : action === "payment_edited" ? "blue"
-                  : action === "payment_deleted" ? "red" : "gray";
+                  : action === "payment_deleted" ? "red"
+                  : action === "payment_archived" ? "orange"
+                  : action === "payment_unarchived" ? "cyan" : "gray";
 
                 return {
                   color,
@@ -116,15 +118,21 @@ export function PaymentDetailModal({ open, onClose, payment }: PaymentDetailModa
                       <p className="text-xs text-muted-foreground">by {by} · {date}</p>
                       {changes.length > 0 && (
                         <div className="mt-1 text-xs space-y-0.5 pl-2 border-l-2 border-primary/20">
-                          {changes.map((c: { field: string; from?: unknown; to?: unknown }, i: number) => (
-                            <div key={i} className="text-muted-foreground">
-                              <span className="font-medium capitalize">{c.field.replace(/_/g, " ")}:</span>{" "}
-                              {c.from !== undefined && (
-                                <><span className="line-through text-red-500">{String(c.from)}</span> &rarr; </>
-                              )}
-                              <span className="text-emerald-600">{String(c.to)}</span>
-                            </div>
-                          ))}
+                          {changes.map((c: { field: string; from?: unknown; to?: unknown }, i: number) => {
+                            const formatValue = (field: string, val: unknown) =>
+                              field === "month" && typeof val === "number"
+                                ? MONTH_NAMES[val - 1] || String(val)
+                                : String(val);
+                            return (
+                              <div key={i} className="text-muted-foreground">
+                                <span className="font-medium capitalize">{c.field.replace(/_/g, " ")}:</span>{" "}
+                                {c.from !== undefined && (
+                                  <><span className="line-through text-red-500">{formatValue(c.field, c.from)}</span> &rarr; </>
+                                )}
+                                <span className="text-emerald-600">{formatValue(c.field, c.to)}</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>

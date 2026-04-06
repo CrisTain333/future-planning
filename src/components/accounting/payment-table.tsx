@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { IPayment, IUser } from "@/types";
-import { Table, Button } from "antd";
+import { Table, Button, Checkbox, Popconfirm } from "antd";
 import type { TableProps } from "antd";
-import { Eye, PencilIcon } from "lucide-react";
+import { Eye, PencilIcon, ArchiveIcon, ArchiveRestoreIcon } from "lucide-react";
 import { PaymentDetailModal } from "./payment-detail-modal";
 
 const MONTH_NAMES = [
@@ -26,14 +26,24 @@ interface PaymentTableProps {
   payments: IPayment[];
   page: number;
   limit: number;
+  mode?: "active" | "archived";
   onEdit: (payment: IPayment) => void;
+  onArchive?: (payment: IPayment) => void;
+  onUnarchive?: (payment: IPayment) => void;
+  selectedRowKeys?: string[];
+  onSelectionChange?: (keys: string[], rows: IPayment[]) => void;
 }
 
 export function PaymentTable({
   payments,
   page,
   limit,
+  mode = "active",
   onEdit,
+  onArchive,
+  onUnarchive,
+  selectedRowKeys,
+  onSelectionChange,
 }: PaymentTableProps) {
   const [viewPayment, setViewPayment] = useState<IPayment | null>(null);
   const getUserName = (userId: string | IUser | null | undefined) =>
@@ -110,11 +120,45 @@ export function PaymentTable({
             onClick={() => setViewPayment(record)}
             title="View details"
           />
-          <Button
-            type="text"
-            icon={<PencilIcon className="h-4 w-4" />}
-            onClick={() => onEdit(record)}
-          />
+          {mode === "active" ? (
+            <>
+              <Button
+                type="text"
+                icon={<PencilIcon className="h-4 w-4" />}
+                onClick={() => onEdit(record)}
+                title="Edit"
+              />
+              {onArchive && (
+                <Popconfirm
+                  title="Archive this payment?"
+                  onConfirm={() => onArchive(record)}
+                  okText="Archive"
+                  cancelText="Cancel"
+                >
+                  <Button
+                    type="text"
+                    icon={<ArchiveIcon className="h-4 w-4 text-muted-foreground" />}
+                    title="Archive"
+                  />
+                </Popconfirm>
+              )}
+            </>
+          ) : (
+            onUnarchive && (
+              <Popconfirm
+                title="Unarchive this payment?"
+                onConfirm={() => onUnarchive(record)}
+                okText="Unarchive"
+                cancelText="Cancel"
+              >
+                <Button
+                  type="text"
+                  icon={<ArchiveRestoreIcon className="h-4 w-4 text-primary" />}
+                  title="Unarchive"
+                />
+              </Popconfirm>
+            )
+          )}
         </>
       ),
     },
@@ -129,6 +173,10 @@ export function PaymentTable({
           dataSource={payments}
           rowKey="_id"
           pagination={false}
+          rowSelection={onSelectionChange ? {
+            selectedRowKeys,
+            onChange: (keys, rows) => onSelectionChange(keys as string[], rows),
+          } : undefined}
           locale={{ emptyText: <span className="text-muted-foreground">No payments found.</span> }}
         />
       </div>
@@ -146,15 +194,60 @@ export function PaymentTable({
               className="rounded-lg border bg-card p-4 space-y-2"
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium">
+                <span className="font-medium flex items-center gap-2">
+                  {onSelectionChange && (
+                    <Checkbox
+                      checked={selectedRowKeys?.includes(payment._id)}
+                      onChange={(e) => {
+                        if (!onSelectionChange) return;
+                        const checked = e.target.checked;
+                        const newKeys = checked
+                          ? [...(selectedRowKeys || []), payment._id]
+                          : (selectedRowKeys || []).filter((k) => k !== payment._id);
+                        const newRows = payments.filter((p) => newKeys.includes(p._id));
+                        onSelectionChange(newKeys, newRows);
+                      }}
+                    />
+                  )}
                   {(page - 1) * limit + index + 1}.{" "}
                   {getUserName(payment.userId)}
                 </span>
-                <Button
-                  type="text"
-                  icon={<PencilIcon className="h-4 w-4" />}
-                  onClick={() => onEdit(payment)}
-                />
+                {mode === "active" ? (
+                  <div className="flex items-center">
+                    <Button
+                      type="text"
+                      icon={<PencilIcon className="h-4 w-4" />}
+                      onClick={() => onEdit(payment)}
+                    />
+                    {onArchive && (
+                      <Popconfirm
+                        title="Archive this payment?"
+                        onConfirm={() => onArchive(payment)}
+                        okText="Archive"
+                        cancelText="Cancel"
+                      >
+                        <Button
+                          type="text"
+                          icon={<ArchiveIcon className="h-4 w-4 text-muted-foreground" />}
+                        />
+                      </Popconfirm>
+                    )}
+                  </div>
+                ) : (
+                  onUnarchive && (
+                    <Popconfirm
+                      title="Unarchive this payment?"
+                      onConfirm={() => onUnarchive(payment)}
+                      okText="Unarchive"
+                      cancelText="Cancel"
+                    >
+                      <Button
+                        type="text"
+                        icon={<ArchiveRestoreIcon className="h-4 w-4 text-primary" />}
+                      />
+                    </Popconfirm>
+                  )
+                )}
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
                 <span>

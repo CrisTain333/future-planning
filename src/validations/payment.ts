@@ -11,6 +11,8 @@ export const createPaymentSchema = z.object({
 });
 
 export const updatePaymentSchema = z.object({
+  month: z.number().int().min(1).max(12).optional(),
+  year: z.number().int().min(2020).max(2100).optional(),
   amount: z.number().positive("Amount must be positive").optional(),
   penalty: z.number().min(0, "Penalty cannot be negative").optional(),
   penaltyReason: z.string().optional().or(z.literal("")),

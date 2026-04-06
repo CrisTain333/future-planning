@@ -30,6 +30,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  let parsedData: Record<string, unknown> | null = null;
+
   try {
     const session = await auth();
     const currentUser = session?.user as unknown as { userId: string; role: string } | undefined;
@@ -44,6 +47,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!parsed.success) {
       return NextResponse.json({ success: false, error: parsed.error.issues[0].message }, { status: 400 });
     }
+    parsedData = parsed.data as Record<string, unknown>;
 
     const before = await Payment.findById(id);
 
@@ -68,7 +72,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }, memberId);
 
     return NextResponse.json({ success: true, data: payment, message: "Payment updated successfully" });
-  } catch (error) {
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code: number }).code === 11000) {
+      const monthNum = parsedData?.month as number | undefined;
+      const yearNum = parsedData?.year as number | undefined;
+      const monthName = monthNum ? MONTH_NAMES[monthNum - 1] : "the selected month";
+      return NextResponse.json(
+        { success: false, error: `A payment already exists for this member in ${monthName} ${yearNum || "the selected year"}` },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ success: false, error: "Failed to update payment" }, { status: 500 });
   }
 }

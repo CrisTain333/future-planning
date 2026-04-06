@@ -23,8 +23,9 @@ export async function GET(req: NextRequest) {
     const month = searchParams.get("month") || "";
     const year = searchParams.get("year") || "";
     const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "approved";
 
-    const query: Record<string, unknown> = { isDeleted: false };
+    const query: Record<string, unknown> = { isDeleted: false, status };
 
     if (userId) query.userId = userId;
     if (month) query.month = parseInt(month);
