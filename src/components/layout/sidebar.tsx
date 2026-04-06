@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Settings2,
   ScrollText,
+  Mail,
   UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ const adminLinks = [
   { href: "/admin/collection-calendar", label: "Calendar", icon: CalendarDays },
   { href: "/admin/settings", label: "Settings", icon: Settings2 },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
+  { href: "/admin/email-logs", label: "Email Logs", icon: Mail },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
