@@ -5,6 +5,9 @@ import Notice from "@/models/Notice";
 import { createNoticeSchema } from "@/validations/notice";
 import { createNoticeNotification } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/audit";
+import { sendEmail } from "@/lib/email/send";
+import { NoticeEmail } from "@/lib/email/templates/notice";
+import User from "@/models/User";
 
 export async function GET(req: NextRequest) {
   try {
@@ -61,6 +64,35 @@ export async function POST(req: NextRequest) {
       notice_body_preview: parsed.data.body.substring(0, 100),
     });
     await createNoticeNotification(notice._id.toString(), parsed.data.title);
+
+    // Send notice email to all active members (non-blocking)
+    const activeMembers = await User.find({
+      isDisabled: false,
+      email: { $exists: true, $ne: "" },
+    }).select("_id email");
+    const creatorName = typeof populated?.createdBy === "object"
+      ? (populated.createdBy as { fullName: string }).fullName
+      : "Admin";
+    const noticeDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    for (const member of activeMembers) {
+      sendEmail({
+        to: member.email,
+        toUserId: member._id.toString(),
+        subject: `Notice: ${parsed.data.title}`,
+        type: "notice",
+        react: NoticeEmail({
+          title: parsed.data.title,
+          body: parsed.data.body,
+          postedBy: creatorName,
+          date: noticeDate,
+        }),
+        metadata: { noticeId: notice._id.toString() },
+      }).catch(() => {}); // Fire-and-forget
+    }
 
     return NextResponse.json({ success: true, data: populated, message: "Notice created successfully" }, { status: 201 });
   } catch (error) {
