@@ -5,6 +5,8 @@ import User from "@/models/User";
 import { updateUserSchema } from "@/validations/user";
 import bcrypt from "bcryptjs";
 import { createAuditLog } from "@/lib/audit";
+import { sendEmail } from "@/lib/email/send";
+import { PasswordChangedEmail } from "@/lib/email/templates/password-changed";
 
 export async function GET(
   req: NextRequest,
@@ -114,6 +116,19 @@ export async function PUT(
       await createAuditLog("user_password_reset", currentUser.userId, {
         action_description: `Reset password for ${before?.fullName || id}`,
       }, id);
+      // Send password changed email (non-blocking)
+      if (user?.email) {
+        sendEmail({
+          to: user.email,
+          toUserId: id,
+          subject: "Your Password Has Been Changed",
+          type: "password_changed",
+          react: PasswordChangedEmail({
+            memberName: user.fullName,
+            newPassword: body.password,
+          }),
+        }).catch(() => {}); // Fire-and-forget
+      }
     }
 
     return NextResponse.json({
