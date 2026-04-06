@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button, Table, Pagination } from "antd";
 import type { TableProps } from "antd";
 import { StatCard } from "./stat-card";
+import { FundLineChart } from "./fund-line-chart";
 import {
   useGetMemberDashboardQuery,
   useGetMyPaymentsQuery,
@@ -267,11 +268,13 @@ export default function MemberDashboard() {
     },
   ];
 
+  const fundGrowthChart = dashboard?.fundGrowthChart ?? [];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Row 1: Stat Cards */}
       <motion.div
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -302,147 +305,163 @@ export default function MemberDashboard() {
         />
       </motion.div>
 
-      {/* Row 2: Payment Bar Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Monthly Payments</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {chartData.length > 0 ? (
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="label"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => `৳${v.toLocaleString()}`}
-                  />
-                  <Tooltip
-                    formatter={(value) => [
-                       `৳${Number(value).toLocaleString()}`,
-                      "Payment",
-                    ]}
-                  />
-                  <Bar
-                    dataKey="amount"
-                    fill="hsl(181, 87%, 31%)"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No payment data available yet.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-      </motion.div>
-
-      {/* Row 3: Recent Notices */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Recent Notices</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentNotices.length > 0 ? (
-            <div className="space-y-3">
-              {recentNotices.map((notice) => (
-                <NoticeCard key={notice._id} notice={notice} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No notices yet</p>
-          )}
-        </CardContent>
-      </Card>
-      </motion.div>
-
-      {/* Row 4: Payment History Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-      >
-      <Card className="glass-card">
-        <CardHeader>
-          <CardTitle>Payment History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {payLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : payments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No payments recorded yet.
-            </p>
-          ) : (
-            <>
-              {/* Desktop table */}
-              <div className="hidden md:block">
-                <Table
-                  columns={columns}
-                  dataSource={payments}
-                  rowKey="_id"
-                  pagination={false}
-                />
-              </div>
-
-              {/* Mobile card layout */}
-              <div className="md:hidden space-y-3">
-                {payments.map((payment, idx) => (
-                  <PaymentCardMobile
-                    key={payment._id}
-                    payment={payment}
-                    index={(page - 1) * limit + idx + 1}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {(pagination?.total ?? 0) > 0 && (
-                <div className="flex justify-center mt-4 border-t border-white/10 pt-4">
-                  <Pagination
-                    current={page}
-                    total={pagination?.total ?? 0}
-                    pageSize={limit}
-                    onChange={(p) => setPage(p)}
-                    showSizeChanger={true}
-                    onShowSizeChange={(current, size) => {
-                      setLimit(size);
-                      setPage(1);
-                    }}
-                    pageSizeOptions={['10', '20', '50', '100']}
-                  />
+      {/* Row 2: Charts side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* My Payments Bar Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <Card className="glass-card h-full">
+            <CardHeader>
+              <CardTitle className="text-base">My Payments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {chartData.length > 0 ? (
+                <div className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="label"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => `৳${v.toLocaleString()}`}
+                      />
+                      <Tooltip
+                        formatter={(value) => [
+                          `৳${Number(value).toLocaleString()}`,
+                          "Payment",
+                        ]}
+                      />
+                      <Bar
+                        dataKey="amount"
+                        fill="hsl(181, 87%, 31%)"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No payment data available yet.
+                </p>
               )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-      </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Total Fund Over Time */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+        >
+          <FundLineChart data={fundGrowthChart} />
+        </motion.div>
+      </div>
+
+      {/* Row 3: Notices + Payment History side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Recent Notices - takes 1/3 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+        >
+          <Card className="glass-card h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Recent Notices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentNotices.length > 0 ? (
+                <div className="space-y-3">
+                  {recentNotices.map((notice) => (
+                    <NoticeCard key={notice._id} notice={notice} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No notices yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Payment History - takes 2/3 */}
+        <motion.div
+          className="lg:col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card className="glass-card h-full">
+            <CardHeader>
+              <CardTitle className="text-base">Payment History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {payLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : payments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No payments recorded yet.
+                </p>
+              ) : (
+                <>
+                  {/* Desktop table */}
+                  <div className="hidden md:block">
+                    <Table
+                      columns={columns}
+                      dataSource={payments}
+                      rowKey="_id"
+                      pagination={false}
+                    />
+                  </div>
+
+                  {/* Mobile card layout */}
+                  <div className="md:hidden space-y-3">
+                    {payments.map((payment, idx) => (
+                      <PaymentCardMobile
+                        key={payment._id}
+                        payment={payment}
+                        index={(page - 1) * limit + idx + 1}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {(pagination?.total ?? 0) > 0 && (
+                    <div className="flex justify-center mt-4 border-t border-white/10 pt-4">
+                      <Pagination
+                        current={page}
+                        total={pagination?.total ?? 0}
+                        pageSize={limit}
+                        onChange={(p) => setPage(p)}
+                        showSizeChanger={true}
+                        onShowSizeChange={(current, size) => {
+                          setLimit(size);
+                          setPage(1);
+                        }}
+                        pageSizeOptions={['10', '20', '50', '100']}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }

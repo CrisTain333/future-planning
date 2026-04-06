@@ -52,6 +52,28 @@ export async function GET() {
       amount: p.amount,
     }));
 
+    // Fund growth chart: cumulative total by month (all members combined)
+    const fundGrowthRaw = await Payment.aggregate([
+      { $match: { isDeleted: false, status: "approved" } },
+      {
+        $group: {
+          _id: { month: "$month", year: "$year" },
+          total: { $sum: "$amount" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+    ]);
+
+    let cumulative = 0;
+    const fundGrowthChart = fundGrowthRaw.map((item) => {
+      cumulative += item.total;
+      return {
+        month: item._id.month,
+        year: item._id.year,
+        total: cumulative,
+      };
+    });
+
     return NextResponse.json({
       success: true,
       data: {
@@ -60,6 +82,7 @@ export async function GET() {
         outstanding,
         status,
         chartData,
+        fundGrowthChart,
       },
     });
   } catch (error) {

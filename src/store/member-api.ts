@@ -7,6 +7,7 @@ interface MemberDashboardData {
   outstanding: number;
   status: string;
   chartData: { month: string; amount: number }[];
+  fundGrowthChart: { month: number; year: number; total: number }[];
 }
 
 interface GetMyPaymentsParams {
