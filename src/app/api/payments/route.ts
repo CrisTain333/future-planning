@@ -5,6 +5,9 @@ import Payment from "@/models/Payment";
 import { createPaymentSchema } from "@/validations/payment";
 import { createPaymentNotification } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/audit";
+import { sendEmail } from "@/lib/email/send";
+import { PaymentReceiptEmail } from "@/lib/email/templates/payment-receipt";
+import User from "@/models/User";
 
 export async function GET(req: NextRequest) {
   try {
@@ -149,6 +152,36 @@ export async function POST(req: NextRequest) {
       `${MONTHS[parsed.data.month - 1]} ${parsed.data.year}`,
       parsed.data.amount
     );
+
+    // Send receipt email (non-blocking)
+    const member = await User.findById(parsed.data.userId).select("email fullName");
+    if (member?.email) {
+      const approverName = typeof populated?.approvedBy === "object"
+        ? (populated.approvedBy as { fullName: string }).fullName
+        : "Admin";
+      sendEmail({
+        to: member.email,
+        toUserId: parsed.data.userId,
+        subject: `Payment Receipt - ${payment.receiptNo}`,
+        type: "payment_receipt",
+        react: PaymentReceiptEmail({
+          memberName: member.fullName,
+          receiptNo: payment.receiptNo,
+          monthName: MONTHS[parsed.data.month - 1],
+          year: parsed.data.year,
+          amount: parsed.data.amount,
+          penalty: parsed.data.penalty || 0,
+          penaltyReason: parsed.data.penaltyReason,
+          approvedBy: approverName,
+          date: new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+        }),
+        metadata: { paymentId: payment._id.toString(), receiptNo: payment.receiptNo },
+      }).catch(() => {}); // Fire-and-forget
+    }
 
     return NextResponse.json({ success: true, data: populated, message: "Payment recorded successfully" }, { status: 201 });
   } catch (error) {
