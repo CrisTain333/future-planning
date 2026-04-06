@@ -6,7 +6,7 @@ export const createUserSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   username: z.string().min(1, "Username is required").toLowerCase(),
   password: z.string().min(4, "Password must be at least 4 characters"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  email: z.string().email("Invalid email address"),
   phone: z.string().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
   bloodGroup: bloodGroupEnum.optional(),
