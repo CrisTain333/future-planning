@@ -125,3 +125,59 @@ export interface SessionUser {
   role: "admin" | "user";
   fullName: string;
 }
+
+export interface IInvestment {
+  _id: string;
+  bankName: string;
+  principalAmount: number;
+  interestRate: number;
+  compoundingFrequency: "quarterly" | "monthly" | "yearly";
+  startDate: string;
+  tenureMonths: number;
+  maturityDate: string;
+  maturityAmount: number;
+  status: "active" | "matured" | "withdrawn";
+  memberContributions: string[] | IUser[];
+  notes?: string;
+  createdBy: string | IUser;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InvestmentAnalytics {
+  summary: {
+    totalInvested: number;
+    totalInterestEarned: number;
+    currentValue: number;
+    projectedMaturityValue: number;
+    activeFDCount: number;
+    dailyEarnings: number;
+    hourlyEarnings: number;
+    monthlyEarnings: number;
+    yearlyEarnings: number;
+  };
+  perFD: Array<{
+    id: string;
+    bankName: string;
+    principalAmount: number;
+    currentValue: number;
+    interestEarned: number;
+    projectedInterest: number;
+    progressPercent: number;
+    daysRemaining: number;
+    maturityDate: string;
+    maturityAmount: number;
+  }>;
+  dailyGrowth: Array<{
+    date: string;
+    fundValue: number;
+    dailyGain: number;
+    cumulativeInterest: number;
+    growthPercent: number;
+  }>;
+  growthChart: Array<{
+    date: string;
+    totalValue: number;
+    [fdId: string]: number | string;
+  }>;
+}
