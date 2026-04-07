@@ -127,8 +127,8 @@ export function AnalyticsTab() {
                     tickFormatter={(v) => `৳${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number, name: string) => [
-                      `৳${value.toLocaleString()}`,
+                    formatter={(value, name) => [
+                      `৳${Number(value).toLocaleString()}`,
                       name,
                     ]}
                     labelStyle={{ fontWeight: 600 }}

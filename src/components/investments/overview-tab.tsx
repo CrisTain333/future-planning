@@ -158,8 +158,8 @@ export function OverviewTab() {
                     tickFormatter={(v) => `৳${(v / 1000).toFixed(0)}k`}
                   />
                   <Tooltip
-                    formatter={(value: number) => [
-                      `৳${value.toLocaleString()}`,
+                    formatter={(value) => [
+                      `৳${Number(value).toLocaleString()}`,
                       "Fund Value",
                     ]}
                     labelStyle={{ fontWeight: 600 }}
