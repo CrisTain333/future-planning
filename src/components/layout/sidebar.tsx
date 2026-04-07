@@ -15,6 +15,7 @@ import {
   ScrollText,
   Mail,
   UserCircle,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Drawer, Button } from "antd";
@@ -33,6 +34,7 @@ const adminLinks = [
   { href: "/admin/accounting", label: "Accounting", icon: Calculator },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/reports", label: "Reports", icon: FileText },
+  { href: "/admin/investments", label: "Investments", icon: Landmark },
   { href: "/admin/collection-calendar", label: "Calendar", icon: CalendarDays },
   { href: "/admin/settings", label: "Settings", icon: Settings2 },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
