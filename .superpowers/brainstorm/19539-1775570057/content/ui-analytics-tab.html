@@ -1,0 +1,192 @@
+<h2>Investment Tracker — Analytics Tab</h2>
+<p class="subtitle">Deep dive into investment performance</p>
+
+<div class="mockup">
+  <div class="mockup-header">Analytics Tab</div>
+  <div class="mockup-body" style="padding: 24px; background: #0a0f1a; color: #e2e8f0; font-family: system-ui, sans-serif;">
+
+    <!-- Tab Bar -->
+    <div style="display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #1e293b;">
+      <div style="padding: 10px 20px; color: #64748b;">Overview</div>
+      <div style="padding: 10px 20px; color: #64748b;">Fixed Deposits</div>
+      <div style="padding: 10px 20px; border-bottom: 2px solid #40916c; color: #40916c; font-weight: 600; margin-bottom: -2px;">Analytics</div>
+    </div>
+
+    <!-- Per-FD Growth Comparison Chart -->
+    <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <div style="font-size: 16px; font-weight: 600;">Per-FD Growth Comparison</div>
+          <div style="font-size: 12px; color: #64748b;">Each FD's value over time · Hover for details</div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <span style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #94a3b8;"><span style="width: 10px; height: 3px; background: #40916c; display: inline-block; border-radius: 2px;"></span> XYZ Bank</span>
+          <span style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: #94a3b8;"><span style="width: 10px; height: 3px; background: #22d3ee; display: inline-block; border-radius: 2px;"></span> ABC Bank</span>
+        </div>
+      </div>
+      <div style="position: relative; height: 180px;">
+        <svg viewBox="0 0 600 160" style="width: 100%; height: 100%;" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#40916c;stop-opacity:0.15"/>
+              <stop offset="100%" style="stop-color:#40916c;stop-opacity:0"/>
+            </linearGradient>
+            <linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:0.15"/>
+              <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:0"/>
+            </linearGradient>
+          </defs>
+          <!-- XYZ Bank line -->
+          <path d="M0,140 Q80,136 160,128 T320,100 T480,65 T600,30" fill="none" stroke="#40916c" stroke-width="2.5"/>
+          <path d="M0,140 Q80,136 160,128 T320,100 T480,65 T600,30 L600,160 L0,160 Z" fill="url(#grad1)"/>
+          <!-- ABC Bank line -->
+          <path d="M0,140 Q80,137 160,130 T320,105 T480,72 T600,25" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+          <path d="M0,140 Q80,137 160,130 T320,105 T480,72 T600,25 L600,160 L0,160 Z" fill="url(#grad2)"/>
+
+          <!-- Hover tooltip mockup -->
+          <rect x="340" y="55" width="130" height="52" rx="6" fill="#1e293b" stroke="#2d3748" stroke-width="1"/>
+          <text x="350" y="72" font-size="10" fill="#94a3b8">15 Oct 2027</text>
+          <text x="350" y="86" font-size="10" fill="#40916c">XYZ: ৳1,72,400</text>
+          <text x="350" y="100" font-size="10" fill="#22d3ee">ABC: ৳1,68,900</text>
+          <circle cx="348" cy="88" r="4" fill="#40916c" stroke="#0a0f1a" stroke-width="1.5"/>
+          <circle cx="348" cy="94" r="4" fill="#22d3ee" stroke="#0a0f1a" stroke-width="1.5"/>
+          <line x1="348" y1="55" x2="348" y2="160" stroke="#475569" stroke-width="0.5" stroke-dasharray="3,3"/>
+        </svg>
+        <div style="position: absolute; bottom: -16px; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 10px; color: #475569;">
+          <span>Apr '26</span><span>Oct '26</span><span>Apr '27</span><span>Oct '27</span><span>Apr '28</span><span>Oct '28</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interest Breakdown + Maturity Timeline side by side -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+
+      <!-- Interest Earned Breakdown -->
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Interest Breakdown by FD</div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- FD 1 -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+              <span style="font-weight: 500;">XYZ Bank</span>
+              <span style="color: #22c55e;">৳12,200 earned</span>
+            </div>
+            <div style="background: #1e293b; height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #40916c, #22c55e); width: 35%; height: 100%; border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 4px;">
+              <span>35% of projected ৳48,150</span>
+              <span>542 days left</span>
+            </div>
+          </div>
+          <!-- FD 2 -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+              <span style="font-weight: 500;">ABC Bank</span>
+              <span style="color: #22c55e;">৳6,250 earned</span>
+            </div>
+            <div style="background: #1e293b; height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #0891b2, #22d3ee); width: 12%; height: 100%; border-radius: 4px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 4px;">
+              <span>12% of projected ৳93,400</span>
+              <span>1,620 days left</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maturity Timeline -->
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Maturity Timeline</div>
+        <div style="position: relative; padding-left: 20px;">
+          <!-- Timeline line -->
+          <div style="position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: #1e293b;"></div>
+
+          <!-- Entry 1 -->
+          <div style="position: relative; margin-bottom: 24px;">
+            <div style="position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #40916c; border: 2px solid #0a0f1a;"></div>
+            <div style="font-size: 11px; color: #40916c; font-weight: 600;">01 Apr 2029</div>
+            <div style="font-size: 13px; font-weight: 500; margin-top: 2px;">XYZ Bank matures</div>
+            <div style="font-size: 12px; color: #64748b;">৳1,50,000 → ৳1,98,150</div>
+            <div style="font-size: 11px; color: #f59e0b; margin-top: 2px;">⏱ 2 years, 11 months away</div>
+          </div>
+
+          <!-- Entry 2 -->
+          <div style="position: relative; margin-bottom: 24px;">
+            <div style="position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #22d3ee; border: 2px solid #0a0f1a;"></div>
+            <div style="font-size: 11px; color: #22d3ee; font-weight: 600;">15 Mar 2031</div>
+            <div style="font-size: 13px; font-weight: 500; margin-top: 2px;">ABC Bank matures</div>
+            <div style="font-size: 12px; color: #64748b;">৳1,50,000 → ৳2,43,400</div>
+            <div style="font-size: 11px; color: #f59e0b; margin-top: 2px;">⏱ 4 years, 11 months away</div>
+          </div>
+
+          <!-- Total -->
+          <div style="position: relative;">
+            <div style="position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: #f59e0b; border: 2px solid #0a0f1a;"></div>
+            <div style="font-size: 11px; color: #f59e0b; font-weight: 600;">All Matured</div>
+            <div style="font-size: 13px; font-weight: 500; margin-top: 2px;">Total returns</div>
+            <div style="font-size: 12px; color: #64748b;">৳3,00,000 invested → ৳4,41,550 returned</div>
+            <div style="font-size: 12px; color: #22c55e; margin-top: 2px;">+৳1,41,550 total interest (47.2%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Growth Table -->
+    <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <div style="font-size: 16px; font-weight: 600;">Daily Growth Log</div>
+          <div style="font-size: 12px; color: #64748b;">Day-by-day fund value changes</div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span style="padding: 4px 12px; background: #1e293b; color: #94a3b8; border-radius: 6px; font-size: 12px;">All FDs ▾</span>
+        </div>
+      </div>
+
+      <!-- Table Header -->
+      <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr; padding: 10px 14px; background: #0f172a; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-radius: 8px 8px 0 0;">
+        <div>Date</div>
+        <div>Fund Value</div>
+        <div>Daily Gain</div>
+        <div>Cumulative Interest</div>
+        <div>Growth %</div>
+      </div>
+
+      <!-- Rows -->
+      <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr; padding: 10px 14px; border-top: 1px solid #1e293b; font-size: 13px;">
+        <div>07 Apr 2026</div>
+        <div style="font-weight: 500;">৳3,00,445</div>
+        <div style="color: #22c55e;">+৳67.50</div>
+        <div>৳445</div>
+        <div style="color: #22c55e;">+0.148%</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr; padding: 10px 14px; border-top: 1px solid #1e293b; font-size: 13px; background: #0f172a44;">
+        <div>06 Apr 2026</div>
+        <div style="font-weight: 500;">৳3,00,378</div>
+        <div style="color: #22c55e;">+৳67.48</div>
+        <div>৳378</div>
+        <div style="color: #22c55e;">+0.126%</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr; padding: 10px 14px; border-top: 1px solid #1e293b; font-size: 13px;">
+        <div>05 Apr 2026</div>
+        <div style="font-weight: 500;">৳3,00,310</div>
+        <div style="color: #22c55e;">+৳67.46</div>
+        <div>৳310</div>
+        <div style="color: #22c55e;">+0.103%</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1fr 1fr; padding: 10px 14px; border-top: 1px solid #1e293b; font-size: 13px; background: #0f172a44;">
+        <div>04 Apr 2026</div>
+        <div style="font-weight: 500;">৳3,00,243</div>
+        <div style="color: #22c55e;">+৳67.44</div>
+        <div>৳243</div>
+        <div style="color: #22c55e;">+0.081%</div>
+      </div>
+      <div style="text-align: center; padding: 10px; color: #64748b; font-size: 12px; border-top: 1px solid #1e293b;">
+        Showing latest 4 days · Paginated
+      </div>
+    </div>
+
+  </div>
+</div>

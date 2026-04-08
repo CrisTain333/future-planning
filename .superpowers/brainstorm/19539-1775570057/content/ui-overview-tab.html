@@ -1,0 +1,120 @@
+<h2>Investment Tracker — Overview Tab</h2>
+<p class="subtitle">The landing view when you open /admin/investments</p>
+
+<div class="mockup">
+  <div class="mockup-header">Overview Tab</div>
+  <div class="mockup-body" style="padding: 24px; background: #0a0f1a; color: #e2e8f0; font-family: system-ui, sans-serif;">
+
+    <!-- Tab Bar -->
+    <div style="display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #1e293b;">
+      <div style="padding: 10px 20px; border-bottom: 2px solid #40916c; color: #40916c; font-weight: 600; margin-bottom: -2px;">Overview</div>
+      <div style="padding: 10px 20px; color: #64748b;">Fixed Deposits</div>
+      <div style="padding: 10px 20px; color: #64748b;">Analytics</div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
+        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Total Invested</div>
+        <div style="font-size: 24px; font-weight: 700; color: #40916c; margin-top: 4px;">৳3,00,000</div>
+        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Across 2 active FDs</div>
+      </div>
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
+        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Interest Earned</div>
+        <div style="font-size: 24px; font-weight: 700; color: #22d3ee; margin-top: 4px;">৳18,450</div>
+        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">As of today</div>
+      </div>
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
+        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Current Value</div>
+        <div style="font-size: 24px; font-weight: 700; color: #e2e8f0; margin-top: 4px;">৳3,18,450</div>
+        <div style="font-size: 12px; color: #22c55e; margin-top: 4px;">+6.15% growth</div>
+      </div>
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 16px;">
+        <div style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Projected at Maturity</div>
+        <div style="font-size: 24px; font-weight: 700; color: #f59e0b; margin-top: 4px;">৳4,52,300</div>
+        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">All FDs combined</div>
+      </div>
+    </div>
+
+    <!-- Growth Chart Area -->
+    <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <div style="font-size: 16px; font-weight: 600;">Combined Fund Growth</div>
+          <div style="font-size: 12px; color: #64748b;">All active fixed deposits</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span style="padding: 4px 12px; background: #40916c33; color: #40916c; border-radius: 6px; font-size: 12px;">All Time</span>
+          <span style="padding: 4px 12px; background: #1e293b; color: #94a3b8; border-radius: 6px; font-size: 12px;">1Y</span>
+          <span style="padding: 4px 12px; background: #1e293b; color: #94a3b8; border-radius: 6px; font-size: 12px;">6M</span>
+          <span style="padding: 4px 12px; background: #1e293b; color: #94a3b8; border-radius: 6px; font-size: 12px;">1M</span>
+        </div>
+      </div>
+      <!-- Simulated Chart -->
+      <div style="position: relative; height: 180px; display: flex; align-items: flex-end; gap: 2px; padding-bottom: 24px;">
+        <svg viewBox="0 0 600 160" style="width: 100%; height: 100%;" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:#40916c;stop-opacity:0.3"/>
+              <stop offset="100%" style="stop-color:#40916c;stop-opacity:0.02"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,140 Q50,138 100,132 T200,115 T300,95 T400,70 T500,45 T600,20" fill="none" stroke="#40916c" stroke-width="2.5"/>
+          <path d="M0,140 Q50,138 100,132 T200,115 T300,95 T400,70 T500,45 T600,20 L600,160 L0,160 Z" fill="url(#grad)"/>
+        </svg>
+        <div style="position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 10px; color: #475569;">
+          <span>Jan '26</span><span>Apr '26</span><span>Jul '26</span><span>Oct '26</span><span>Jan '27</span><span>Apr '27</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Earnings Highlight -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px;">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Daily Earnings</div>
+        <div style="font-size: 32px; font-weight: 700; color: #40916c;">৳67.50</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">You're earning this much every day across all FDs</div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #1e293b;">
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+            <span style="color: #94a3b8;">Per hour</span>
+            <span style="color: #e2e8f0;">৳2.81</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+            <span style="color: #94a3b8;">Per month</span>
+            <span style="color: #e2e8f0;">৳2,025</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px;">
+            <span style="color: #94a3b8;">Per year</span>
+            <span style="color: #e2e8f0;">৳24,300</span>
+          </div>
+        </div>
+      </div>
+      <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 20px;">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Active Fixed Deposits</div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #0a0f1a; border-radius: 8px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 600;">XYZ Bank</div>
+              <div style="font-size: 11px; color: #64748b;">৳1,50,000 · 9.5% · 3 years</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 13px; color: #22c55e;">৳1,62,200</div>
+              <div style="font-size: 11px; color: #64748b;">542 days left</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #0a0f1a; border-radius: 8px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 600;">ABC Bank</div>
+              <div style="font-size: 11px; color: #64748b;">৳1,50,000 · 10% · 5 years</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 13px; color: #22c55e;">৳1,56,250</div>
+              <div style="font-size: 11px; color: #64748b;">1,620 days left</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

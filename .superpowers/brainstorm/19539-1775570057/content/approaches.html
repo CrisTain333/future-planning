@@ -1,0 +1,54 @@
+<h2>Investment Tracker — Architecture Approaches</h2>
+<p class="subtitle">How should we structure the data and page layout?</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Single Page with Tabs</h3>
+      <p>One <code>/admin/investments</code> page with 3 tabs:</p>
+      <ul>
+        <li><strong>Overview</strong> — Summary cards + combined growth chart for all FDs</li>
+        <li><strong>Fixed Deposits</strong> — Table of all FDs with CRUD actions</li>
+        <li><strong>Analytics</strong> — Daily growth, per-FD breakdown, projections</li>
+      </ul>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Everything in one place</li><li>Quick switching between views</li><li>Matches your existing analytics page pattern</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Could feel crowded as FDs grow</li></ul></div>
+      </div>
+      <p><strong>⭐ Recommended</strong> — fits your current admin layout and keeps things focused</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Two Separate Pages</h3>
+      <p>Split into <code>/admin/investments</code> (management) and <code>/admin/investments/analytics</code> (visualization):</p>
+      <ul>
+        <li><strong>Investments page</strong> — FD table + summary cards + create/edit</li>
+        <li><strong>Analytics page</strong> — All charts, daily growth, projections</li>
+      </ul>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>Clean separation of management vs analytics</li><li>Room to grow each page independently</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>More navigation needed</li><li>Two sidebar entries</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Integrated into Existing Analytics</h3>
+      <p>Add an "Investments" section to the existing <code>/admin/analytics</code> page:</p>
+      <ul>
+        <li>New section below the current fund projection chart</li>
+        <li>FD management via a modal or separate sub-route</li>
+      </ul>
+      <div class="pros-cons">
+        <div class="pros"><h4>Pros</h4><ul><li>No new pages needed</li><li>All analytics in one place</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Analytics page gets very long</li><li>FD management feels shoehorned in</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>

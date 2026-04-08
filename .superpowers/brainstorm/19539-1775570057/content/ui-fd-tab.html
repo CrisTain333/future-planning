@@ -1,0 +1,170 @@
+<h2>Investment Tracker — Fixed Deposits Tab</h2>
+<p class="subtitle">Manage all your fixed deposits</p>
+
+<div class="mockup">
+  <div class="mockup-header">Fixed Deposits Tab</div>
+  <div class="mockup-body" style="padding: 24px; background: #0a0f1a; color: #e2e8f0; font-family: system-ui, sans-serif;">
+
+    <!-- Tab Bar -->
+    <div style="display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid #1e293b;">
+      <div style="padding: 10px 20px; color: #64748b;">Overview</div>
+      <div style="padding: 10px 20px; border-bottom: 2px solid #40916c; color: #40916c; font-weight: 600; margin-bottom: -2px;">Fixed Deposits</div>
+      <div style="padding: 10px 20px; color: #64748b;">Analytics</div>
+    </div>
+
+    <!-- Header Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div>
+        <div style="font-size: 18px; font-weight: 600;">Fixed Deposits</div>
+        <div style="font-size: 13px; color: #64748b;">2 active · 1 matured</div>
+      </div>
+      <button style="background: #40916c; color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 18px;">+</span> New Fixed Deposit
+      </button>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+      <span style="padding: 4px 14px; background: #40916c33; color: #40916c; border-radius: 20px; font-size: 12px; font-weight: 500;">All (3)</span>
+      <span style="padding: 4px 14px; background: #1e293b; color: #94a3b8; border-radius: 20px; font-size: 12px;">Active (2)</span>
+      <span style="padding: 4px 14px; background: #1e293b; color: #94a3b8; border-radius: 20px; font-size: 12px;">Matured (1)</span>
+      <span style="padding: 4px 14px; background: #1e293b; color: #94a3b8; border-radius: 20px; font-size: 12px;">Withdrawn (0)</span>
+    </div>
+
+    <!-- Table -->
+    <div style="background: #111827; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;">
+      <!-- Table Header -->
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 1fr 1fr 1fr 0.8fr 0.6fr; padding: 12px 16px; background: #0f172a; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">
+        <div>Bank</div>
+        <div>Principal</div>
+        <div>Rate</div>
+        <div>Start Date</div>
+        <div>Maturity</div>
+        <div>Current Value</div>
+        <div>Status</div>
+        <div></div>
+      </div>
+
+      <!-- Row 1 - Active -->
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 1fr 1fr 1fr 0.8fr 0.6fr; padding: 14px 16px; border-top: 1px solid #1e293b; align-items: center; font-size: 13px;">
+        <div>
+          <div style="font-weight: 600;">XYZ Bank</div>
+          <div style="font-size: 11px; color: #64748b;">3 year term · 12 members</div>
+        </div>
+        <div style="font-weight: 500;">৳1,50,000</div>
+        <div>9.5%</div>
+        <div>01 Apr 2026</div>
+        <div>01 Apr 2029</div>
+        <div style="color: #22c55e; font-weight: 600;">৳1,62,200</div>
+        <div><span style="padding: 2px 10px; background: #22c55e22; color: #22c55e; border-radius: 20px; font-size: 11px;">Active</span></div>
+        <div style="color: #64748b; cursor: pointer;">•••</div>
+      </div>
+
+      <!-- Row 2 - Active -->
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 1fr 1fr 1fr 0.8fr 0.6fr; padding: 14px 16px; border-top: 1px solid #1e293b; align-items: center; font-size: 13px;">
+        <div>
+          <div style="font-weight: 600;">ABC Bank</div>
+          <div style="font-size: 11px; color: #64748b;">5 year term · 12 members</div>
+        </div>
+        <div style="font-weight: 500;">৳1,50,000</div>
+        <div>10%</div>
+        <div>15 Mar 2026</div>
+        <div>15 Mar 2031</div>
+        <div style="color: #22c55e; font-weight: 600;">৳1,56,250</div>
+        <div><span style="padding: 2px 10px; background: #22c55e22; color: #22c55e; border-radius: 20px; font-size: 11px;">Active</span></div>
+        <div style="color: #64748b; cursor: pointer;">•••</div>
+      </div>
+
+      <!-- Row 3 - Matured -->
+      <div style="display: grid; grid-template-columns: 2fr 1.2fr 0.8fr 1fr 1fr 1fr 0.8fr 0.6fr; padding: 14px 16px; border-top: 1px solid #1e293b; align-items: center; font-size: 13px; opacity: 0.7;">
+        <div>
+          <div style="font-weight: 600;">DEF Bank</div>
+          <div style="font-size: 11px; color: #64748b;">1 year term · 10 members</div>
+        </div>
+        <div style="font-weight: 500;">৳1,00,000</div>
+        <div>8.5%</div>
+        <div>01 Jan 2025</div>
+        <div>01 Jan 2026</div>
+        <div style="color: #e2e8f0; font-weight: 600;">৳1,08,770</div>
+        <div><span style="padding: 2px 10px; background: #f59e0b22; color: #f59e0b; border-radius: 20px; font-size: 11px;">Matured</span></div>
+        <div style="color: #64748b; cursor: pointer;">•••</div>
+      </div>
+    </div>
+
+    <!-- Create FD Modal Preview -->
+    <div style="margin-top: 32px; padding-top: 24px; border-top: 2px dashed #1e293b;">
+      <div style="font-size: 14px; color: #64748b; margin-bottom: 16px; text-align: center;">⬇ "New Fixed Deposit" opens this modal:</div>
+
+      <div style="max-width: 500px; margin: 0 auto; background: #111827; border: 1px solid #1e293b; border-radius: 16px; padding: 24px;">
+        <div style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">Create Fixed Deposit</div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Bank Name</div>
+            <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px;">e.g., XYZ Bank</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Principal Amount (৳)</div>
+              <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px;">150000</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Interest Rate (%)</div>
+              <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px;">9.5</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Start Date</div>
+              <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px;">01 Apr 2026</div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Tenure (months)</div>
+              <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px;">36</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Compounding</div>
+            <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px;">Quarterly ▾</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Contributing Members</div>
+            <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; display: flex; gap: 6px; flex-wrap: wrap;">
+              <span style="background: #40916c33; color: #40916c; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Rahim ✕</span>
+              <span style="background: #40916c33; color: #40916c; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Karim ✕</span>
+              <span style="background: #40916c33; color: #40916c; padding: 2px 8px; border-radius: 4px; font-size: 11px;">+10 more ✕</span>
+              <span style="color: #64748b; font-size: 12px;">Select members...</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Notes (optional)</div>
+            <div style="background: #0a0f1a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 12px; color: #64748b; font-size: 13px; min-height: 40px;">Any additional details...</div>
+          </div>
+
+          <!-- Calculated Preview -->
+          <div style="background: #40916c11; border: 1px solid #40916c33; border-radius: 8px; padding: 12px; margin-top: 4px;">
+            <div style="font-size: 12px; color: #40916c; font-weight: 600; margin-bottom: 8px;">Calculated Preview</div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+              <span style="color: #94a3b8;">Maturity Date</span>
+              <span style="color: #e2e8f0;">01 Apr 2029</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+              <span style="color: #94a3b8;">Maturity Amount</span>
+              <span style="color: #22c55e; font-weight: 600;">৳1,98,150</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+              <span style="color: #94a3b8;">Total Interest</span>
+              <span style="color: #22d3ee;">৳48,150</span>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 8px;">
+            <button style="flex: 1; background: #1e293b; color: #94a3b8; border: none; padding: 10px; border-radius: 8px; font-size: 14px; cursor: pointer;">Cancel</button>
+            <button style="flex: 1; background: #40916c; color: white; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">Create FD</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
