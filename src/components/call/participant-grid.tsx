@@ -116,12 +116,12 @@ export function ParticipantGrid({
 }: ParticipantGridProps) {
   const is1on1 = participants.length <= 1 && !screenStream;
 
-  // 1-on-1: large remote + small PiP local
+  // 1-on-1: remote fills entire area, local in small PiP
   if (is1on1) {
     const remote = participants[0];
     return (
-      <div className="flex-1 relative min-h-0">
-        {/* Large: remote person */}
+      <div style={{ position: "absolute", inset: 0 }}>
+        {/* Remote fills everything */}
         {remote ? (
           <VideoTile
             stream={remote.stream}
@@ -138,8 +138,8 @@ export function ParticipantGrid({
           </div>
         )}
 
-        {/* Small PiP: local camera */}
-        <div className="absolute bottom-4 right-4 w-32 h-24 md:w-44 md:h-32 rounded-xl overflow-hidden shadow-2xl border-2 border-gray-700 z-10">
+        {/* Small PiP: local camera — positioned above the controls area */}
+        <div className="absolute bottom-28 right-4 w-28 h-36 md:w-36 md:h-48 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-10">
           <VideoTile
             stream={localStream}
             name={localName}

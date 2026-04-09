@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 import { usePeer } from "@/hooks/use-peer";
@@ -24,6 +24,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const currentUser = session?.user as unknown as { userId: string; fullName: string };
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
   useEffect(() => { setMounted(true); }, []);
 
   const peer = usePeer({ userId: currentUser.userId });
@@ -33,6 +34,19 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       onClose();
     },
   });
+
+  // Call duration timer — starts when call becomes active
+  useEffect(() => {
+    if (call.callState !== "active") return;
+    const timer = setInterval(() => setCallDuration((d) => d + 1), 1000);
+    return () => clearInterval(timer);
+  }, [call.callState]);
+
+  const formattedDuration = useMemo(() => {
+    const mins = Math.floor(callDuration / 60);
+    const secs = callDuration % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  }, [callDuration]);
 
   const isGroupCall = conversation.type === "group";
 
@@ -360,21 +374,35 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         </div>
       )}
 
-      <ParticipantGrid
-        participants={call.participants.map((p) => ({
-          peerId: p.peerId,
-          name: p.fullName,
-          stream: p.stream,
-          isMuted: p.isMuted,
-          isCameraOff: p.isCameraOff,
-        }))}
-        localStream={call.localStream}
-        screenStream={call.screenStream}
-        localName={currentUser.fullName}
-        localIsMuted={call.isMuted}
-        localIsCameraOff={call.isCameraOff}
-      />
-      <div className="flex items-center justify-center pb-6">
+      {/* Video fills entire screen */}
+      <div className="absolute inset-0">
+        <ParticipantGrid
+          participants={call.participants.map((p) => ({
+            peerId: p.peerId,
+            name: p.fullName,
+            stream: p.stream,
+            isMuted: p.isMuted,
+            isCameraOff: p.isCameraOff,
+          }))}
+          localStream={call.localStream}
+          screenStream={call.screenStream}
+          localName={currentUser.fullName}
+          localIsMuted={call.isMuted}
+          localIsCameraOff={call.isCameraOff}
+        />
+      </div>
+
+      {/* Timer at top center */}
+      {call.callState === "active" && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-mono">
+            {formattedDuration}
+          </div>
+        </div>
+      )}
+
+      {/* Controls overlaid at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center pb-8 pt-16 bg-gradient-to-t from-black/60 to-transparent">
         <CallControls
           isMuted={call.isMuted}
           isCameraOff={call.isCameraOff}
