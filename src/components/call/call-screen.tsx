@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { usePeer } from "@/hooks/use-peer";
 import { useCall } from "@/hooks/use-call";
@@ -23,13 +23,23 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const currentUser = session?.user as unknown as { userId: string; fullName: string };
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const { callPeer, connectData, onIncomingCall, onIncomingData, closeAllConnections } = usePeer({ userId: currentUser.userId });
+  const peer = usePeer({ userId: currentUser.userId });
   const call = useCall({
     onCallEnded: () => {
       playCallEnded();
       onClose();
     },
   });
+
+  const isGroupCall = conversation.type === "group";
+
+  // Use refs so PeerJS event handlers always access latest values
+  const callRef = useRef(call);
+  callRef.current = call;
+  const isGroupRef = useRef(isGroupCall);
+  isGroupRef.current = isGroupCall;
+  const peerRef = useRef(peer);
+  peerRef.current = peer;
 
   // Poll call status to detect when other side hangs up or declines
   useEffect(() => {
@@ -42,134 +52,144 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
         const activeCalls = json.data.calls as ICallLog[];
         const thisCall = activeCalls.find((c) => c._id === callLog._id);
+        const state = callRef.current.callState;
 
-        // If the call is no longer in active/ringing list, it was ended/declined/missed
-        if (!thisCall && (call.callState === "active" || call.callState === "ringing" || call.callState === "connecting")) {
-          call.endCall();
+        if (!thisCall && (state === "active" || state === "ringing" || state === "connecting")) {
+          callRef.current.endCall();
         }
       } catch {}
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [callLog._id, call]);
+  }, [callLog._id]);
 
-  const isGroupCall = conversation.type === "group";
-
-  // Helper: resolve user info from peerId
-  const resolveUser = useCallback((peerId: string) => {
+  // Resolve user info from peerId
+  const resolveUser = (peerId: string) => {
     const userId = peerId.replace("fp-", "");
     const user = conversation.participants.find(
       (p) => typeof p === "object" && (p as IUser)._id === userId
     ) as IUser | undefined;
     return { userId, fullName: user?.fullName || "Unknown" };
-  }, [conversation.participants]);
+  };
 
-  // Helper: wire up a media connection (incoming or outgoing)
-  const wireMediaConnection = useCallback((mediaConn: MediaConnection, stream: MediaStream) => {
-    const remotePeerId = mediaConn.peer;
-    const { userId, fullName } = resolveUser(remotePeerId);
-
-    mediaConn.on("stream", (remoteStream) => {
-      call.setParticipants((prev) => [
-        ...prev.filter((p) => p.peerId !== remotePeerId),
-        { peerId: remotePeerId, userId, fullName, stream: remoteStream, mediaConnection: mediaConn, dataConnection: null },
-      ]);
-    });
-
-    // When remote peer leaves
-    mediaConn.on("close", () => {
-      if (isGroupCall) {
-        // Group call: just remove the participant
-        call.removeParticipant(remotePeerId);
-      } else {
-        // 1-on-1: end the whole call
-        call.endCall();
-      }
-    });
-
-    // Answer if incoming
-    if (mediaConn.open === false || mediaConn.open === undefined) {
-      // This is an incoming call we received — answer it
-    }
-  }, [resolveUser, call, isGroupCall]);
-
+  // Main setup effect — runs once on mount
   useEffect(() => {
+    let localStream: MediaStream | null = null;
+
+    const wireMedia = (mediaConn: MediaConnection) => {
+      const remotePeerId = mediaConn.peer;
+      const { userId, fullName } = resolveUser(remotePeerId);
+
+      mediaConn.on("stream", (remoteStream) => {
+        callRef.current.setParticipants((prev) => [
+          ...prev.filter((p) => p.peerId !== remotePeerId),
+          {
+            peerId: remotePeerId,
+            userId,
+            fullName,
+            stream: remoteStream,
+            mediaConnection: mediaConn,
+            dataConnection: null,
+          },
+        ]);
+      });
+
+      mediaConn.on("close", () => {
+        if (isGroupRef.current) {
+          callRef.current.removeParticipant(remotePeerId);
+        } else {
+          callRef.current.endCall();
+        }
+      });
+    };
+
     const setup = async () => {
-      const stream = await call.startLocalStream(callLog.type);
+      localStream = await callRef.current.startLocalStream(callLog.type);
 
-      // Always listen for incoming calls (both initiator and joiner get calls from new peers)
-      onIncomingCall((incomingCall: MediaConnection) => {
+      // Listen for incoming PeerJS calls (works for both initiator and joiner)
+      peerRef.current.onIncomingCall((incomingCall: MediaConnection) => {
         playCallConnected();
-        incomingCall.answer(stream);
-        wireMediaConnection(incomingCall, stream);
+        incomingCall.answer(localStream!);
+        wireMedia(incomingCall);
 
-        // Initiator: transition from ringing to active (no server call — callee already did it)
-        call.markActive();
+        // If this is the initiator and was ringing, mark as active
+        callRef.current.markActive();
+      });
+
+      // Listen for incoming data connections (in-call chat)
+      peerRef.current.onIncomingData((conn: DataConnection) => {
+        conn.on("data", (data) => {
+          const msg = data as { senderId: string; senderName: string; content: string };
+          callRef.current.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
+        });
       });
 
       if (isInitiator) {
-        await call.initiateCall(callLog.type, callLog);
-        // Initiator waits for others to call in via onIncomingCall above
+        // Initiator: start ringing, wait for callee to connect via onIncomingCall
+        await callRef.current.initiateCall(callLog.type, callLog);
       } else {
-        await call.acceptCall(callLog);
+        // Joiner: accept the call and connect to existing participants
+        await callRef.current.acceptCall(callLog);
         playCallConnected();
 
-        // Connect to ALL existing participants who already joined
-        // Check the call log participants to find who has already joined
+        // Find who's already in the call
         const otherParticipantIds = callLog.participants
           .filter((p) => {
             const pid = typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId;
             return pid !== currentUser.userId && p.joinedAt !== null;
           })
-          .map((p) => typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId);
+          .map((p) => (typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId));
 
-        // If no one has explicitly joined yet, at least connect to the initiator
+        // Fallback: connect to initiator if no one has joinedAt set yet
         if (otherParticipantIds.length === 0) {
-          const initiatorId = typeof callLog.initiatedBy === "object"
-            ? (callLog.initiatedBy as IUser)._id
-            : callLog.initiatedBy;
+          const initiatorId =
+            typeof callLog.initiatedBy === "object"
+              ? (callLog.initiatedBy as IUser)._id
+              : callLog.initiatedBy;
           otherParticipantIds.push(initiatorId);
         }
 
         // Call each existing participant
         for (const userId of otherParticipantIds) {
           const remotePeerId = `fp-${userId}`;
-          const mediaConn = callPeer(remotePeerId, stream);
+          const mediaConn = peerRef.current.callPeer(remotePeerId, localStream!);
           if (mediaConn) {
-            wireMediaConnection(mediaConn, stream);
+            wireMedia(mediaConn);
           }
         }
       }
-
-      // Data channel for in-call chat
-      onIncomingData((conn: DataConnection) => {
-        conn.on("data", (data) => {
-          const msg = data as { senderId: string; senderName: string; content: string };
-          call.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
-        });
-      });
     };
 
     setup();
-    return () => { closeAllConnections(); };
+
+    return () => {
+      peerRef.current.closeAllConnections();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSendChatMessage = useCallback((content: string) => {
-    const msg = { senderId: currentUser.userId, senderName: currentUser.fullName, content };
-    call.participants.forEach((p) => {
-      if (p.dataConnection) { p.dataConnection.send(msg); }
-      else { const conn = connectData(p.peerId); if (conn) conn.on("open", () => conn.send(msg)); }
-    });
-    call.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
-  }, [call, connectData, currentUser]);
+  const handleSendChatMessage = useCallback(
+    (content: string) => {
+      const msg = { senderId: currentUser.userId, senderName: currentUser.fullName, content };
+      call.participants.forEach((p) => {
+        if (p.dataConnection) {
+          p.dataConnection.send(msg);
+        } else {
+          const conn = peer.connectData(p.peerId);
+          if (conn) conn.on("open", () => conn.send(msg));
+        }
+      });
+      call.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
+    },
+    [call, peer, currentUser]
+  );
 
   const handleToggleScreenShare = useCallback(async () => {
     if (call.isScreenSharing) call.stopScreenShare();
     else await call.startScreenShare();
   }, [call]);
 
-  // Get display name for status overlay
+  // Display name for status overlay
   const getCallDisplayName = () => {
     if (conversation.type === "group") return conversation.name || "Group Call";
     const other = conversation.participants.find(
@@ -186,7 +206,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       {showStatusOverlay && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/95">
           <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">
-            <span className="text-3xl font-bold text-primary">{getCallDisplayName().charAt(0).toUpperCase()}</span>
+            <span className="text-3xl font-bold text-primary">
+              {getCallDisplayName().charAt(0).toUpperCase()}
+            </span>
           </div>
           <h2 className="text-xl font-semibold text-white mb-2">{getCallDisplayName()}</h2>
           <div className="flex items-center gap-2 text-gray-400">
@@ -211,30 +233,53 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
               </>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-2">{call.callType === "video" ? "Video" : "Audio"} call</p>
-          {/* End call button during ringing */}
+          <p className="text-xs text-gray-500 mt-2">
+            {call.callType === "video" ? "Video" : "Audio"} call
+          </p>
           <button
             onClick={call.endCall}
             className="mt-8 h-14 w-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 2.59 3.4z"/><line x1="23" y1="1" x2="1" y2="23"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 2.59 3.4z" />
+              <line x1="23" y1="1" x2="1" y2="23" />
+            </svg>
           </button>
         </div>
       )}
 
       <ParticipantGrid
-        participants={call.participants.map((p) => ({ peerId: p.peerId, name: p.fullName, stream: p.stream }))}
-        localStream={call.localStream} screenStream={call.screenStream} localName={currentUser.fullName}
+        participants={call.participants.map((p) => ({
+          peerId: p.peerId,
+          name: p.fullName,
+          stream: p.stream,
+        }))}
+        localStream={call.localStream}
+        screenStream={call.screenStream}
+        localName={currentUser.fullName}
       />
       <div className="flex items-center justify-center pb-6">
-        <CallControls isMuted={call.isMuted} isCameraOff={call.isCameraOff} isScreenSharing={call.isScreenSharing}
-          isChatOpen={isChatOpen} callType={call.callType} onToggleMute={call.toggleMute} onToggleCamera={call.toggleCamera}
-          onToggleScreenShare={handleToggleScreenShare} onToggleChat={() => setIsChatOpen(!isChatOpen)} onEndCall={call.endCall}
+        <CallControls
+          isMuted={call.isMuted}
+          isCameraOff={call.isCameraOff}
+          isScreenSharing={call.isScreenSharing}
+          isChatOpen={isChatOpen}
+          callType={call.callType}
+          onToggleMute={call.toggleMute}
+          onToggleCamera={call.toggleCamera}
+          onToggleScreenShare={handleToggleScreenShare}
+          onToggleChat={() => setIsChatOpen(!isChatOpen)}
+          onEndCall={call.endCall}
         />
       </div>
       {isChatOpen && (
         <div className="absolute top-0 right-0 h-full">
-          <InCallChat messages={call.inCallMessages} onSend={handleSendChatMessage} onClose={() => setIsChatOpen(false)} currentUserId={currentUser.userId} />
+          <InCallChat
+            messages={call.inCallMessages}
+            onSend={handleSendChatMessage}
+            onClose={() => setIsChatOpen(false)}
+            currentUserId={currentUser.userId}
+          />
         </div>
       )}
     </div>
