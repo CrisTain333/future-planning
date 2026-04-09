@@ -68,7 +68,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     const wireMedia = (mediaConn: MediaConnection, remoteName: string) => {
       const remotePeerId = mediaConn.peer;
 
-      mediaConn.on("stream", (remoteStream) => {
+      mediaConn.on("stream", async (remoteStream) => {
         console.log("[CallScreen] Got remote stream from:", remotePeerId);
         callRef.current.setParticipants((prev) => [
           ...prev.filter((p) => p.peerId !== remotePeerId),
@@ -81,6 +81,38 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
             dataConnection: null,
           },
         ]);
+
+        // Also open a data connection for hang_up signals and media state
+        if (!dataConnsRef.current.has(remotePeerId)) {
+          try {
+            const dataConn = await peer.connectData(remotePeerId);
+            if (dataConn) {
+              dataConn.on("open", () => {
+                console.log("[wireMedia] Data channel opened to:", remotePeerId);
+                dataConnsRef.current.set(remotePeerId, dataConn);
+              });
+              dataConn.on("data", (data: unknown) => {
+                const parsed = data as Record<string, unknown>;
+                if (parsed.type === "hang_up") {
+                  console.log("[wireMedia] Remote peer hung up via data channel");
+                  callRef.current.endCall();
+                } else if (parsed.type === "media_state") {
+                  const pid = parsed.peerId as string;
+                  callRef.current.setParticipants((prev) =>
+                    prev.map((p) =>
+                      p.peerId === pid
+                        ? { ...p, isMuted: parsed.isMuted as boolean, isCameraOff: parsed.isCameraOff as boolean }
+                        : p
+                    )
+                  );
+                }
+              });
+              dataConn.on("close", () => dataConnsRef.current.delete(remotePeerId));
+            }
+          } catch {
+            console.log("[wireMedia] Failed to open data channel to:", remotePeerId);
+          }
+        }
       });
 
       // Don't auto-end on media close — PeerJS cloud drops signaling after ~30s
