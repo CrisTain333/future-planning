@@ -11,6 +11,12 @@ export interface IUserDocument extends Document {
   profilePicture?: string;
   role: "admin" | "user";
   isDisabled: boolean;
+  googleTokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: Date;
+    scope: string;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +34,12 @@ const UserSchema = new Schema<IUserDocument>(
       enum: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"],
     },
     profilePicture: { type: String },
+    googleTokens: {
+      accessToken: { type: String },
+      refreshToken: { type: String },
+      expiresAt: { type: Date },
+      scope: { type: String },
+    },
     role: { type: String, enum: ["admin", "user"], default: "user" },
     isDisabled: { type: Boolean, default: false },
   },

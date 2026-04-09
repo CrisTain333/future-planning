@@ -181,3 +181,61 @@ export interface InvestmentAnalytics {
     [fdId: string]: number | string;
   }>;
 }
+
+// --- Meeting Manager Types ---
+
+export interface IAttendanceRecord {
+  user: string | IUser;
+  status: "present" | "absent" | "excused" | "not_marked";
+  checkInTime: string | null;
+  markedBy: "self" | "admin";
+  markedByAdmin: string | null;
+}
+
+export interface IActionItem {
+  _id: string;
+  title: string;
+  assignee: string | IUser;
+  dueDate: string;
+  status: "pending" | "done";
+}
+
+export interface IMeetingMinutes {
+  mode: "structured" | "freeform";
+  freeformContent: string;
+  agendaItems: {
+    title: string;
+    discussion: string;
+    decision: string;
+  }[];
+  decisions: string[];
+  actionItems: IActionItem[];
+  status: "draft" | "finalized";
+  finalizedAt: string | null;
+}
+
+export interface IReminderRecord {
+  sentAt: string;
+  sentBy: string | IUser;
+}
+
+export interface IMeeting {
+  _id: string;
+  title: string;
+  description: string;
+  agenda: string[];
+  date: string;
+  duration: number;
+  type: "regular" | "special" | "emergency";
+  googleEventId: string | null;
+  meetLink: string | null;
+  invitees: (string | IUser)[];
+  attendance: IAttendanceRecord[];
+  minutes: IMeetingMinutes;
+  status: "scheduled" | "in-progress" | "completed" | "cancelled";
+  cancelledReason: string;
+  reminderSent: IReminderRecord[];
+  createdBy: string | IUser;
+  createdAt: string;
+  updatedAt: string;
+}
