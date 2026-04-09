@@ -63,7 +63,9 @@ export async function GET(req: NextRequest) {
     const calls = await CallLog.find({
       conversationId: { $in: conversationIds },
       status: { $in: ["ringing", "active"] },
-    });
+    })
+      .populate("initiatedBy", "fullName profilePicture")
+      .populate("participants.userId", "fullName profilePicture");
 
     return NextResponse.json({
       success: true,
