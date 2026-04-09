@@ -76,20 +76,14 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         ]);
       });
 
-      // Ignore close events in the first 5 seconds — PeerJS fires spurious
-      // close events when connections are being set up or replaced
-      const connectedAt = Date.now();
+      // Don't auto-end on media close — PeerJS cloud drops signaling after ~30s
+      // which tears down media connections even though WebRTC is peer-to-peer.
+      // Users end calls manually via the hang-up button.
       mediaConn.on("close", () => {
-        const elapsed = Date.now() - connectedAt;
-        if (elapsed < 5000) {
-          console.log("[wireMedia] Ignoring early close event after", elapsed, "ms");
-          return;
-        }
-        console.log("[wireMedia] Connection closed after", elapsed, "ms — ending");
+        console.log("[wireMedia] Media connection closed for:", remotePeerId);
+        // Just remove from participant grid in group calls
         if (isGroupRef.current) {
           callRef.current.removeParticipant(remotePeerId);
-        } else {
-          callRef.current.endCall();
         }
       });
     };
@@ -158,6 +152,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         console.log("[CallScreen] Joiner: accepted, polling for other peer IDs...");
 
         // Poll for other participants' peer IDs
+        // Track peers we've already called to prevent duplicates
+        const calledPeers = new Set<string>();
+
         const connectToPeers = async () => {
           try {
             const res = await fetch(`/api/calls/${callLog._id}/peer`);
@@ -175,15 +172,10 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
               const pUserId = typeof p.userId === "object" ? p.userId._id : p.userId;
               const pName = typeof p.userId === "object" ? p.userId.fullName : "Unknown";
 
-              // Skip self, skip those without peer ID
               if (pUserId === currentUser.userId || !p.peerId) continue;
+              if (calledPeers.has(p.peerId)) continue;
 
-              // Skip if already connected to this peer
-              const alreadyConnected = callRef.current.participants.some(
-                (existing) => existing.peerId === p.peerId
-              );
-              if (alreadyConnected) continue;
-
+              calledPeers.add(p.peerId);
               console.log("[CallScreen] Calling peer:", p.peerId, "for user:", pName);
               const mediaConn = await peer.callPeer(p.peerId, localStream!);
               if (mediaConn) {
@@ -195,11 +187,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
           }
         };
 
-        // Poll every 2s until we connect to someone
+        // Poll every 2s until we connect to someone, stop after 30s
         connectToPeers();
         pollInterval = setInterval(connectToPeers, 2000);
-
-        // Stop polling after 30 seconds
         setTimeout(() => {
           if (pollInterval) clearInterval(pollInterval);
         }, 30000);

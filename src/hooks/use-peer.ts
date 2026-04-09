@@ -69,9 +69,10 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
     });
 
     peer.on("disconnected", () => {
-      console.log("[PeerJS] Disconnected, reconnecting...");
+      console.log("[PeerJS] Disconnected from signaling server (WebRTC connections stay alive)");
       setIsConnected(false);
-      peer.reconnect();
+      // Don't reconnect — WebRTC peer-to-peer connections survive signaling server disconnect
+      // Reconnecting causes a loop with the free PeerJS cloud server
     });
 
     peer.on("error", (err) => {
