@@ -15,6 +15,9 @@
 
 # next.js
 /.next/
+/.next-build/
+/.next-clean/
+/.next-fresh/
 /out/
 
 # production

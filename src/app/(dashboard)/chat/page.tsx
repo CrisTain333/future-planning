@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
@@ -16,7 +17,7 @@ import { CallScreen } from "@/components/call/call-screen";
 import { MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function ChatPage() {
+function ChatPageContent() {
   const { data: session } = useSession();
   const currentUserId = (session?.user as unknown as { userId: string })?.userId;
   const searchParams = useSearchParams();
@@ -158,5 +159,13 @@ export default function ChatPage() {
         <CallScreen callLog={activeCall.callLog} conversation={activeConversation} isInitiator={activeCall.isInitiator} onClose={() => setActiveCall(null)} />
       )}
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="h-[calc(100vh-4rem)] flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+      <ChatPageContent />
+    </Suspense>
   );
 }
