@@ -138,7 +138,10 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
         conn.on("data", (data) => {
           const parsed = data as Record<string, unknown>;
-          if (parsed.type === "media_state") {
+          if (parsed.type === "hang_up") {
+            console.log("[CallScreen] Remote peer hung up");
+            callRef.current.endCall();
+          } else if (parsed.type === "media_state") {
             const peerId = parsed.peerId as string;
             callRef.current.setParticipants((prev) =>
               prev.map((p) =>
@@ -250,6 +253,17 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     [call, currentUser]
   );
 
+  // Send hang_up signal to all peers before ending
+  const handleEndCall = useCallback(() => {
+    dataConnsRef.current.forEach((conn) => {
+      if (conn.open) {
+        try { conn.send({ type: "hang_up" }); } catch {}
+      }
+    });
+    // Small delay to let the message send before closing connections
+    setTimeout(() => call.endCall(), 100);
+  }, [call]);
+
   const handleToggleScreenShare = useCallback(async () => {
     if (call.isScreenSharing) call.stopScreenShare();
     else await call.startScreenShare();
@@ -303,7 +317,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
             {call.callType === "video" ? "Video" : "Audio"} call
           </p>
           <button
-            onClick={call.endCall}
+            onClick={handleEndCall}
             className="mt-8 h-14 w-14 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -339,7 +353,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
           onToggleCamera={call.toggleCamera}
           onToggleScreenShare={handleToggleScreenShare}
           onToggleChat={() => setIsChatOpen(!isChatOpen)}
-          onEndCall={call.endCall}
+          onEndCall={handleEndCall}
         />
       </div>
       {isChatOpen && (
