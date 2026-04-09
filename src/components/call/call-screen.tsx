@@ -23,6 +23,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const { data: session } = useSession();
   const currentUser = session?.user as unknown as { userId: string; fullName: string };
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const peer = usePeer({ userId: currentUser.userId });
   const call = useCall({
@@ -142,10 +144,13 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
       // Listen for data connections (chat messages + media state updates)
       peer.onIncomingData((conn: DataConnection) => {
+        // Store for reuse when broadcasting media state
+        dataConnsRef.current.set(conn.peer, conn);
+        conn.on("close", () => dataConnsRef.current.delete(conn.peer));
+
         conn.on("data", (data) => {
           const parsed = data as Record<string, unknown>;
           if (parsed.type === "media_state") {
-            // Update remote participant's muted/camera state
             const peerId = parsed.peerId as string;
             callRef.current.setParticipants((prev) =>
               prev.map((p) =>
@@ -155,7 +160,6 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
               )
             );
           } else {
-            // Chat message
             const msg = parsed as { senderId: string; senderName: string; content: string };
             callRef.current.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
           }
@@ -230,7 +234,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Broadcast mute/camera state to all peers when it changes
+  // Broadcast mute/camera state via existing data connections only (no new connections)
+  const dataConnsRef = useRef<Map<string, DataConnection>>(new Map());
+
   useEffect(() => {
     if (call.callState !== "active" || call.participants.length === 0) return;
 
@@ -241,30 +247,26 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       isCameraOff: call.isCameraOff,
     };
 
-    call.participants.forEach(async (p) => {
-      if (p.dataConnection?.open) {
-        p.dataConnection.send(state);
-      } else {
-        const conn = await peer.connectData(p.peerId);
-        if (conn) conn.on("open", () => conn.send(state));
+    // Send via existing open data connections only
+    dataConnsRef.current.forEach((conn) => {
+      if (conn.open) {
+        try { conn.send(state); } catch {}
       }
     });
-  }, [call.isMuted, call.isCameraOff, call.callState, call.participants, peer]);
+  }, [call.isMuted, call.isCameraOff, call.callState, call.participants.length, peer.peerId]);
 
   const handleSendChatMessage = useCallback(
-    async (content: string) => {
+    (content: string) => {
       const msg = { senderId: currentUser.userId, senderName: currentUser.fullName, content };
-      for (const p of call.participants) {
-        if (p.dataConnection) {
-          p.dataConnection.send(msg);
-        } else {
-          const conn = await peer.connectData(p.peerId);
-          if (conn) conn.on("open", () => conn.send(msg));
+      // Send via stored data connections
+      dataConnsRef.current.forEach((conn) => {
+        if (conn.open) {
+          try { conn.send(msg); } catch {}
         }
-      }
+      });
       call.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
     },
-    [call, peer, currentUser]
+    [call, currentUser]
   );
 
   const handleToggleScreenShare = useCallback(async () => {
@@ -282,9 +284,10 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
   const showStatusOverlay = call.callState === "ringing" || call.callState === "connecting";
 
-  // Render via portal to document.body to escape any parent overflow/transform clipping
+  if (!mounted) return null;
+
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-gray-900 flex flex-col" style={{ width: "100vw", height: "100vh", top: 0, left: 0 }}>
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100vw", height: "100vh", zIndex: 9999, background: "#111827", display: "flex", flexDirection: "column" }}>
       {showStatusOverlay && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/95">
           <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">
