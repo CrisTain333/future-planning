@@ -32,6 +32,7 @@ function ChatPageContent() {
   const [typingUsers, setTypingUsers] = useState<IPresence[]>([]);
   const [incomingCall, setIncomingCall] = useState<ICallLog | null>(null);
   const [activeCall, setActiveCall] = useState<{ callLog: ICallLog; isInitiator: boolean } | null>(null);
+  const [ongoingCalls, setOngoingCalls] = useState<ICallLog[]>([]);
 
   const { data: conversationsData } = useGetConversationsQuery({ limit: 50 });
   const conversations = (conversationsData?.data || []) as IConversation[];
@@ -75,6 +76,9 @@ function ChatPageContent() {
 
   const handleCalls = useCallback(
     (calls: ICallLog[]) => {
+      // Track all ongoing calls for "Join" banner
+      setOngoingCalls(calls);
+
       const ringingCall = calls.find(
         (c) =>
           c.status === "ringing" &&
@@ -132,6 +136,18 @@ function ChatPageContent() {
     }
   }, [incomingCall]);
 
+  const handleJoinCall = useCallback((callLog: ICallLog) => {
+    setActiveCall({ callLog, isInitiator: false });
+  }, []);
+
+  // Find ongoing call for the active conversation (that the user is NOT already in)
+  const ongoingCallForActiveConversation = useMemo(() => {
+    if (!activeConversationId || activeCall) return null;
+    return ongoingCalls.find((c) =>
+      c.conversationId === activeConversationId && c.status === "active"
+    ) || null;
+  }, [activeConversationId, ongoingCalls, activeCall]);
+
   return (
     <div className="h-[calc(100vh-4rem)] flex">
       <div className="w-80 flex-shrink-0 hidden md:block">
@@ -151,6 +167,8 @@ function ChatPageContent() {
             newMessages={newMessages}
             onAudioCall={() => handleStartCall("audio")}
             onVideoCall={() => handleStartCall("video")}
+            ongoingCall={ongoingCallForActiveConversation}
+            onJoinCall={handleJoinCall}
           />
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground">

@@ -3,13 +3,14 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useGetMessagesQuery, useSendMessageMutation, useDeleteMessageMutation, useMarkConversationReadMutation, useHeartbeatMutation } from "@/store/chat-api";
-import { IConversation, IMessage, IPresence, IUser } from "@/types";
+import { IConversation, IMessage, IPresence, IUser, ICallLog } from "@/types";
 import { ConversationHeader } from "./conversation-header";
 import { MessageBubble } from "./message-bubble";
 import { MessageInput } from "./message-input";
 import { TypingIndicator } from "./typing-indicator";
 import toast from "react-hot-toast";
 import { playMessageSent } from "@/lib/sounds";
+import { Phone, Video } from "lucide-react";
 
 interface ChatWindowProps {
   conversation: IConversation;
@@ -18,9 +19,11 @@ interface ChatWindowProps {
   newMessages: IMessage[];
   onAudioCall: () => void;
   onVideoCall: () => void;
+  ongoingCall?: ICallLog | null;
+  onJoinCall?: (callLog: ICallLog) => void;
 }
 
-export function ChatWindow({ conversation, presenceMap, typingUsers, newMessages, onAudioCall, onVideoCall }: ChatWindowProps) {
+export function ChatWindow({ conversation, presenceMap, typingUsers, newMessages, onAudioCall, onVideoCall, ongoingCall, onJoinCall }: ChatWindowProps) {
   const { data: session } = useSession();
   const currentUserId = (session?.user as unknown as { userId: string })?.userId;
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -97,6 +100,34 @@ export function ChatWindow({ conversation, presenceMap, typingUsers, newMessages
   return (
     <div className="flex flex-col h-full">
       <ConversationHeader conversation={conversation} currentUserId={currentUserId} presenceMap={presenceMap} onAudioCall={onAudioCall} onVideoCall={onVideoCall} />
+
+      {/* Ongoing call banner */}
+      {ongoingCall && onJoinCall && (
+        <div className="mx-3 mt-2 flex items-center justify-between rounded-lg bg-green-50 border border-green-200 px-4 py-2.5">
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center">
+              <span className="absolute h-3 w-3 rounded-full bg-green-500 animate-ping opacity-50" />
+              <span className="relative h-3 w-3 rounded-full bg-green-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-green-800">
+                {ongoingCall.type === "video" ? "Video" : "Audio"} call in progress
+              </p>
+              <p className="text-xs text-green-600">
+                {ongoingCall.participants.filter((p) => p.joinedAt).length} participant{ongoingCall.participants.filter((p) => p.joinedAt).length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onJoinCall(ongoingCall)}
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+          >
+            {ongoingCall.type === "video" ? <Video className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
+            Join
+          </button>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto p-4">
         {isLoading ? (
           <div className="text-center text-sm text-muted-foreground py-8">Loading messages...</div>
