@@ -46,7 +46,7 @@ export interface INotice {
 export interface INotification {
   _id: string;
   userId: string;
-  type: "payment_recorded" | "notice_posted";
+  type: "payment_recorded" | "notice_posted" | "chat_message" | "incoming_call" | "missed_call";
   title: string;
   message: string;
   referenceId: string;

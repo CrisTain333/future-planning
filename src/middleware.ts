@@ -8,6 +8,7 @@ export const config = {
     "/dashboard/:path*",
     "/profile/:path*",
     "/admin/:path*",
+    "/chat/:path*",
     "/login",
   ],
 };

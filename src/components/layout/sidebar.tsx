@@ -17,6 +17,7 @@ import {
   UserCircle,
   Landmark,
   Video,
+  MessageCircle,
   Menu,
   X,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import { useState, useEffect } from "react";
 const memberLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/meetings", label: "Meetings", icon: Video },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
@@ -38,6 +40,7 @@ const adminLinks = [
   { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/meetings", label: "Meetings", icon: Video },
   { href: "/admin/investments", label: "Investments", icon: Landmark },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/admin/collection-calendar", label: "Calendar", icon: CalendarDays },
   { href: "/admin/settings", label: "Settings", icon: Settings2 },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: ScrollText },
