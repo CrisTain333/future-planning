@@ -1,5 +1,4 @@
 import dbConnect from "@/lib/db";
-import Notification from "@/models/Notification";
 import Presence from "@/models/Presence";
 import { sendPushToUser } from "@/lib/push";
 
@@ -13,27 +12,16 @@ export async function notifyNewMessage(
   await dbConnect();
 
   const recipients = recipientIds.filter((id) => id !== senderId);
+  const preview = messagePreview.length > 100 ? messagePreview.slice(0, 100) + "..." : messagePreview;
 
-  const onlinePresences = await Presence.find({
-    userId: { $in: recipients },
-    status: "online",
-  });
-  const onlineUserIds = new Set(onlinePresences.map((p) => p.userId.toString()));
-
-  const notifications = recipients.map((userId) => ({
-    userId,
-    type: "chat_message" as const,
-    title: `Message from ${senderName}`,
-    message: messagePreview.length > 100 ? messagePreview.slice(0, 100) + "..." : messagePreview,
-    referenceId: conversationId,
-  }));
-  await Notification.insertMany(notifications);
-
-  const offlineRecipients = recipients.filter((id) => !onlineUserIds.has(id));
-  for (const userId of offlineRecipients) {
+  // Chat uses device push notifications only — no in-app notification records.
+  // Send push to all recipients except those actively online with the chat open
+  // (they'll see it via polling). For simplicity, push to everyone — the browser
+  // won't show a duplicate if the tab is focused (service worker handles this).
+  for (const userId of recipients) {
     await sendPushToUser(userId, {
-      title: `Message from ${senderName}`,
-      body: messagePreview.length > 100 ? messagePreview.slice(0, 100) + "..." : messagePreview,
+      title: senderName,
+      body: preview,
       tag: `chat-${conversationId}`,
       data: { type: "chat_message", conversationId },
     });
