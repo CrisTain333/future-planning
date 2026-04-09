@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus } from "lucide-react";
-import { useGetConversationsQuery } from "@/store/chat-api";
+import { useState, useRef, useEffect } from "react";
+import { Search, Plus, Trash2, LogOut } from "lucide-react";
+import { useGetConversationsQuery, useDeleteConversationMutation } from "@/store/chat-api";
 import { useSession } from "next-auth/react";
 import { IConversation, IUser, IPresence } from "@/types";
 import { OnlineBadge } from "./online-badge";
+import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -39,8 +40,37 @@ function getAvatarColor(name: string): string {
 
 export function ChatSidebar({ activeConversationId, onSelectConversation, onCreateNew, presenceMap }: ChatSidebarProps) {
   const [search, setSearch] = useState("");
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; convId: string; convType: string } | null>(null);
+  const contextRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession();
   const currentUserId = (session?.user as unknown as { userId: string })?.userId;
+  const [deleteConversation] = useDeleteConversationMutation();
+
+  // Close context menu on outside click
+  useEffect(() => {
+    const handler = () => setContextMenu(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, []);
+
+  const handleContextMenu = (e: React.MouseEvent, convId: string, convType: string) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, convId, convType });
+  };
+
+  const handleDelete = async () => {
+    if (!contextMenu) return;
+    try {
+      await deleteConversation(contextMenu.convId).unwrap();
+      toast.success(contextMenu.convType === "group" ? "Left group" : "Conversation deleted");
+      if (activeConversationId === contextMenu.convId) {
+        onSelectConversation("");
+      }
+    } catch {
+      toast.error("Failed to delete conversation");
+    }
+    setContextMenu(null);
+  };
 
   const { data, isLoading } = useGetConversationsQuery({ search, limit: 50 });
   const conversations = (data?.data as (IConversation & { unreadCount?: number })[]) || [];
@@ -119,6 +149,7 @@ export function ChatSidebar({ activeConversationId, onSelectConversation, onCrea
               <button
                 key={conv._id}
                 onClick={() => onSelectConversation(conv._id)}
+                onContextMenu={(e) => handleContextMenu(e, conv._id, conv.type)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 relative
                   ${isActive
                     ? "bg-[hsl(181,87%,31%)]/8 border-l-[3px] border-l-[hsl(181,87%,31%)]"
@@ -167,6 +198,26 @@ export function ChatSidebar({ activeConversationId, onSelectConversation, onCrea
           })
         )}
       </div>
+
+      {/* Right-click context menu */}
+      {contextMenu && (
+        <div
+          ref={contextRef}
+          className="fixed z-50 bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[160px]"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+        >
+          <button
+            onClick={handleDelete}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            {contextMenu.convType === "group" ? (
+              <><LogOut className="h-4 w-4" /> Leave Group</>
+            ) : (
+              <><Trash2 className="h-4 w-4" /> Delete Chat</>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

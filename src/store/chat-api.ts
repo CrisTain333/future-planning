@@ -67,6 +67,13 @@ export const chatApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Conversations"],
     }),
+    deleteConversation: builder.mutation<ApiResponse<null>, string>({
+      query: (id) => ({
+        url: `/conversations/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Conversations", "Messages"],
+    }),
     getMessages: builder.query<
       PaginatedResponse<IMessage>,
       { conversationId: string; before?: string; limit?: number }
@@ -129,6 +136,7 @@ export const {
   useSendMessageMutation,
   useDeleteMessageMutation,
   useMarkConversationReadMutation,
+  useDeleteConversationMutation,
   useGetChatMembersQuery,
   useLazySyncQuery,
   useHeartbeatMutation,

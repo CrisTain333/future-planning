@@ -13,6 +13,8 @@ interface CallParticipant {
   stream: MediaStream | null;
   mediaConnection: MediaConnection | null;
   dataConnection: DataConnection | null;
+  isMuted?: boolean;
+  isCameraOff?: boolean;
 }
 
 interface InCallMessage {

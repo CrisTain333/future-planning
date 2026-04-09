@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Conversation from "@/models/Conversation";
+import Message from "@/models/Message";
 import { updateConversationSchema } from "@/validations/chat";
 import mongoose from "mongoose";
 
@@ -83,6 +84,60 @@ export async function PUT(
   } catch (error) {
     return NextResponse.json(
       { success: false, error: "Failed to update conversation" },
+      { status: 500 }
+    );
+  }
+}
+
+// Delete (leave) conversation
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await auth();
+    const currentUser = session?.user as unknown as { userId: string; role: string } | undefined;
+    if (!currentUser) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    await dbConnect();
+    const { id } = await params;
+
+    const conversation = await Conversation.findById(id);
+    if (!conversation) {
+      return NextResponse.json({ success: false, error: "Conversation not found" }, { status: 404 });
+    }
+
+    const isParticipant = conversation.participants
+      .map((p: mongoose.Types.ObjectId) => p.toString())
+      .includes(currentUser.userId);
+    if (!isParticipant) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+    }
+
+    if (conversation.type === "direct") {
+      // DM: delete conversation and all messages permanently
+      await Message.deleteMany({ conversationId: id });
+      await Conversation.findByIdAndDelete(id);
+    } else {
+      // Group: remove user from participants
+      await Conversation.findByIdAndUpdate(id, {
+        $pull: { participants: new mongoose.Types.ObjectId(currentUser.userId) },
+      });
+
+      // If no participants left, delete the conversation
+      const updated = await Conversation.findById(id);
+      if (updated && updated.participants.length === 0) {
+        await Message.deleteMany({ conversationId: id });
+        await Conversation.findByIdAndDelete(id);
+      }
+    }
+
+    return NextResponse.json({ success: true, data: null });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, error: "Failed to delete conversation" },
       { status: 500 }
     );
   }

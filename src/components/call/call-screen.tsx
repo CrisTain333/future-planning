@@ -132,11 +132,25 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         callRef.current.markActive();
       });
 
-      // Listen for data connections
+      // Listen for data connections (chat messages + media state updates)
       peer.onIncomingData((conn: DataConnection) => {
         conn.on("data", (data) => {
-          const msg = data as { senderId: string; senderName: string; content: string };
-          callRef.current.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
+          const parsed = data as Record<string, unknown>;
+          if (parsed.type === "media_state") {
+            // Update remote participant's muted/camera state
+            const peerId = parsed.peerId as string;
+            callRef.current.setParticipants((prev) =>
+              prev.map((p) =>
+                p.peerId === peerId
+                  ? { ...p, isMuted: parsed.isMuted as boolean, isCameraOff: parsed.isCameraOff as boolean }
+                  : p
+              )
+            );
+          } else {
+            // Chat message
+            const msg = parsed as { senderId: string; senderName: string; content: string };
+            callRef.current.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
+          }
         });
       });
 
@@ -207,6 +221,27 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Broadcast mute/camera state to all peers when it changes
+  useEffect(() => {
+    if (call.callState !== "active" || call.participants.length === 0) return;
+
+    const state = {
+      type: "media_state",
+      peerId: peer.peerId,
+      isMuted: call.isMuted,
+      isCameraOff: call.isCameraOff,
+    };
+
+    call.participants.forEach(async (p) => {
+      if (p.dataConnection?.open) {
+        p.dataConnection.send(state);
+      } else {
+        const conn = await peer.connectData(p.peerId);
+        if (conn) conn.on("open", () => conn.send(state));
+      }
+    });
+  }, [call.isMuted, call.isCameraOff, call.callState, call.participants, peer]);
 
   const handleSendChatMessage = useCallback(
     async (content: string) => {
@@ -291,6 +326,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
           peerId: p.peerId,
           name: p.fullName,
           stream: p.stream,
+          isMuted: p.isMuted,
+          isCameraOff: p.isCameraOff,
         }))}
         localStream={call.localStream}
         screenStream={call.screenStream}
