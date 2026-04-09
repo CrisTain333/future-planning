@@ -40,6 +40,10 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const callRef = useRef(call);
   callRef.current = call;
   const isGroupRef = useRef(isGroupCall);
+
+  // Track peers we've already connected to (persists across strict mode reruns)
+  const connectedPeersRef = useRef<Set<string>>(new Set());
+  const setupRanRef = useRef(false);
   isGroupRef.current = isGroupCall;
 
   // Call end detection relies on PeerJS media connection "close" event
@@ -53,8 +57,11 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     return user?.fullName || "Unknown";
   };
 
-  // Main setup effect
+  // Main setup effect — skip if already ran (React strict mode protection)
   useEffect(() => {
+    if (setupRanRef.current) return;
+    setupRanRef.current = true;
+
     let localStream: MediaStream | null = null;
     let pollInterval: NodeJS.Timeout | null = null;
 
@@ -110,7 +117,13 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
       // 4. Listen for incoming PeerJS calls from other participants
       peer.onIncomingCall((incomingCall: MediaConnection) => {
-        console.log("[CallScreen] Incoming PeerJS call from:", incomingCall.peer);
+        const remotePeerId = incomingCall.peer;
+        if (connectedPeersRef.current.has(remotePeerId)) {
+          console.log("[CallScreen] Ignoring duplicate incoming call from:", remotePeerId);
+          return;
+        }
+        connectedPeersRef.current.add(remotePeerId);
+        console.log("[CallScreen] Incoming PeerJS call from:", remotePeerId);
         playCallConnected();
         incomingCall.answer(localStream!);
         wireMedia(incomingCall, "Participant");
@@ -152,9 +165,6 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         console.log("[CallScreen] Joiner: accepted, polling for other peer IDs...");
 
         // Poll for other participants' peer IDs
-        // Track peers we've already called to prevent duplicates
-        const calledPeers = new Set<string>();
-
         const connectToPeers = async () => {
           try {
             const res = await fetch(`/api/calls/${callLog._id}/peer`);
@@ -173,9 +183,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
               const pName = typeof p.userId === "object" ? p.userId.fullName : "Unknown";
 
               if (pUserId === currentUser.userId || !p.peerId) continue;
-              if (calledPeers.has(p.peerId)) continue;
+              if (connectedPeersRef.current.has(p.peerId)) continue;
 
-              calledPeers.add(p.peerId);
+              connectedPeersRef.current.add(p.peerId);
               console.log("[CallScreen] Calling peer:", p.peerId, "for user:", pName);
               const mediaConn = await peer.callPeer(p.peerId, localStream!);
               if (mediaConn) {

@@ -29,9 +29,9 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
   useEffect(() => {
     if (!enabled || !userId) return;
 
-    if (peerRef.current) {
-      peerRef.current.destroy();
-      peerRef.current = null;
+    // Skip if peer already exists (React strict mode runs effects twice)
+    if (peerRef.current && !peerRef.current.destroyed) {
+      return;
     }
 
     // Let PeerJS auto-generate ID to avoid conflicts from React strict mode / stale sessions
@@ -81,11 +81,10 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
     });
 
     return () => {
-      peer.destroy();
-      peerRef.current = null;
-      setPeerId(null);
-      setIsConnected(false);
-      readyResolversRef.current = [];
+      // Don't destroy immediately — React strict mode will re-run the effect
+      // and we want to reuse the existing peer connection
+      // The peer will be destroyed when the component truly unmounts
+      // (usePeer is only used in CallScreen which unmounts on call end)
     };
   }, [userId, enabled]);
 
