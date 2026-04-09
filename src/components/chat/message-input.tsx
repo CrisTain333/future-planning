@@ -60,7 +60,7 @@ export function MessageInput({ onSend, onTyping, replyTo, onCancelReply, disable
   const replyAuthor = replyTo && typeof replyTo.senderId === "object" ? (replyTo.senderId as IUser).fullName : "";
 
   return (
-    <div className="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
+    <div className="bg-white border-t border-gray-200 px-3 md:px-4 py-2 md:py-3 flex-shrink-0">
       {/* Reply preview strip */}
       {replyTo && (
         <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-gray-50 border-l-[3px] border-l-[hsl(181,87%,31%)]">

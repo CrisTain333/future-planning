@@ -167,17 +167,34 @@ function ChatPageContent() {
     ) || null;
   }, [activeConversationId, ongoingCalls, activeCall]);
 
+  const handleSelectConversation = useCallback((id: string) => {
+    setActiveConversationId(id);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setActiveConversationId(null);
+  }, []);
+
   return (
     <div className="h-[calc(100vh-3.5rem)] flex overflow-hidden">
-      <div className="w-80 flex-shrink-0 hidden md:flex md:flex-col border-r border-gray-200 bg-white">
+      {/* Sidebar: always visible on desktop, only visible on mobile when no conversation selected */}
+      <div className={`
+        w-full md:w-80 flex-shrink-0 md:flex md:flex-col border-r border-gray-200 bg-white
+        ${activeConversationId ? "hidden md:flex" : "flex flex-col"}
+      `}>
         <ChatSidebar
           activeConversationId={activeConversationId}
-          onSelectConversation={setActiveConversationId}
+          onSelectConversation={handleSelectConversation}
           onCreateNew={() => setShowCreateModal(true)}
           presenceMap={presenceMap}
         />
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
+
+      {/* Chat area: always visible on desktop, only visible on mobile when conversation selected */}
+      <div className={`
+        flex-1 flex flex-col overflow-hidden
+        ${activeConversationId ? "flex" : "hidden md:flex"}
+      `}>
         {activeConversation ? (
           <ChatWindow
             conversation={activeConversation}
@@ -188,6 +205,7 @@ function ChatPageContent() {
             onVideoCall={() => handleStartCall("video")}
             ongoingCall={ongoingCallForActiveConversation}
             onJoinCall={handleJoinCall}
+            onBack={handleBack}
           />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] text-muted-foreground">
