@@ -31,16 +31,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     },
   });
 
-  // Poll call status to detect when other side hangs up
+  // Poll call status to detect when other side hangs up or declines
   useEffect(() => {
-    const checkCallStatus = async () => {
-      try {
-        const res = await fetch(`/api/calls/${callLog._id}`, { method: "GET" });
-        // If GET doesn't exist, use the sync data instead — but the simple approach:
-        // check via the realtime sync if call is no longer ringing/active
-      } catch {}
-    };
-
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/realtime/sync?since=${encodeURIComponent(new Date(Date.now() - 5000).toISOString())}`);
@@ -51,12 +43,12 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         const activeCalls = json.data.calls as ICallLog[];
         const thisCall = activeCalls.find((c) => c._id === callLog._id);
 
-        // If the call is no longer in active/ringing calls, it was ended by the other side
-        if (!thisCall && call.callState === "active") {
+        // If the call is no longer in active/ringing list, it was ended/declined/missed
+        if (!thisCall && (call.callState === "active" || call.callState === "ringing" || call.callState === "connecting")) {
           call.endCall();
         }
       } catch {}
-    }, 3000);
+    }, 2000);
 
     return () => clearInterval(interval);
   }, [callLog._id, call]);
