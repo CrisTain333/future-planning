@@ -41,6 +41,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
+    // Auto-expire stale calls: ringing > 2 min, active > 4 hours
+    await CallLog.updateMany(
+      {
+        conversationId,
+        status: "ringing",
+        createdAt: { $lt: new Date(Date.now() - 2 * 60 * 1000) },
+      },
+      { $set: { status: "missed", endedAt: new Date() } }
+    );
+    await CallLog.updateMany(
+      {
+        conversationId,
+        status: "active",
+        createdAt: { $lt: new Date(Date.now() - 4 * 60 * 60 * 1000) },
+      },
+      { $set: { status: "ended", endedAt: new Date() } }
+    );
+
     // Check no active call already in this conversation
     const existingCall = await CallLog.findOne({
       conversationId,
