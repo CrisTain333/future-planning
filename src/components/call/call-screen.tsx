@@ -53,56 +53,97 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     return () => clearInterval(interval);
   }, [callLog._id, call]);
 
+  const isGroupCall = conversation.type === "group";
+
+  // Helper: resolve user info from peerId
+  const resolveUser = useCallback((peerId: string) => {
+    const userId = peerId.replace("fp-", "");
+    const user = conversation.participants.find(
+      (p) => typeof p === "object" && (p as IUser)._id === userId
+    ) as IUser | undefined;
+    return { userId, fullName: user?.fullName || "Unknown" };
+  }, [conversation.participants]);
+
+  // Helper: wire up a media connection (incoming or outgoing)
+  const wireMediaConnection = useCallback((mediaConn: MediaConnection, stream: MediaStream) => {
+    const remotePeerId = mediaConn.peer;
+    const { userId, fullName } = resolveUser(remotePeerId);
+
+    mediaConn.on("stream", (remoteStream) => {
+      call.setParticipants((prev) => [
+        ...prev.filter((p) => p.peerId !== remotePeerId),
+        { peerId: remotePeerId, userId, fullName, stream: remoteStream, mediaConnection: mediaConn, dataConnection: null },
+      ]);
+    });
+
+    // When remote peer leaves
+    mediaConn.on("close", () => {
+      if (isGroupCall) {
+        // Group call: just remove the participant
+        call.removeParticipant(remotePeerId);
+      } else {
+        // 1-on-1: end the whole call
+        call.endCall();
+      }
+    });
+
+    // Answer if incoming
+    if (mediaConn.open === false || mediaConn.open === undefined) {
+      // This is an incoming call we received — answer it
+    }
+  }, [resolveUser, call, isGroupCall]);
+
   useEffect(() => {
     const setup = async () => {
       const stream = await call.startLocalStream(callLog.type);
 
+      // Always listen for incoming calls (both initiator and joiner get calls from new peers)
+      onIncomingCall((incomingCall: MediaConnection) => {
+        playCallConnected();
+        incomingCall.answer(stream);
+        wireMediaConnection(incomingCall, stream);
+
+        // If initiator was ringing, move to active now that someone answered
+        if (call.callState === "ringing") {
+          call.acceptCall(callLog);
+        }
+      });
+
       if (isInitiator) {
         await call.initiateCall(callLog.type, callLog);
-        onIncomingCall((incomingCall: MediaConnection) => {
-          playCallConnected();
-          incomingCall.answer(stream);
-          incomingCall.on("stream", (remoteStream) => {
-            const remotePeerId = incomingCall.peer;
-            const remoteUserId = remotePeerId.replace("fp-", "");
-            const remoteUser = conversation.participants.find(
-              (p) => typeof p === "object" && (p as IUser)._id === remoteUserId
-            ) as IUser | undefined;
-            call.setParticipants((prev) => [
-              ...prev.filter((p) => p.peerId !== remotePeerId),
-              { peerId: remotePeerId, userId: remoteUserId, fullName: remoteUser?.fullName || "Unknown", stream: remoteStream, mediaConnection: incomingCall, dataConnection: null },
-            ]);
-          });
-
-          // Detect when remote peer hangs up via PeerJS
-          incomingCall.on("close", () => {
-            call.endCall();
-          });
-        });
+        // Initiator waits for others to call in via onIncomingCall above
       } else {
         await call.acceptCall(callLog);
         playCallConnected();
-        const initiatorId = typeof callLog.initiatedBy === "object" ? (callLog.initiatedBy as IUser)._id : callLog.initiatedBy;
-        const remotePeerId = `fp-${initiatorId}`;
-        const mediaConn = callPeer(remotePeerId, stream);
-        if (mediaConn) {
-          mediaConn.on("stream", (remoteStream) => {
-            const initiatorUser = conversation.participants.find(
-              (p) => typeof p === "object" && (p as IUser)._id === initiatorId
-            ) as IUser | undefined;
-            call.setParticipants((prev) => [
-              ...prev.filter((p) => p.peerId !== remotePeerId),
-              { peerId: remotePeerId, userId: initiatorId, fullName: initiatorUser?.fullName || "Unknown", stream: remoteStream, mediaConnection: mediaConn, dataConnection: null },
-            ]);
-          });
 
-          // Detect when remote peer hangs up via PeerJS
-          mediaConn.on("close", () => {
-            call.endCall();
-          });
+        // Connect to ALL existing participants who already joined
+        // Check the call log participants to find who has already joined
+        const otherParticipantIds = callLog.participants
+          .filter((p) => {
+            const pid = typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId;
+            return pid !== currentUser.userId && p.joinedAt !== null;
+          })
+          .map((p) => typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId);
+
+        // If no one has explicitly joined yet, at least connect to the initiator
+        if (otherParticipantIds.length === 0) {
+          const initiatorId = typeof callLog.initiatedBy === "object"
+            ? (callLog.initiatedBy as IUser)._id
+            : callLog.initiatedBy;
+          otherParticipantIds.push(initiatorId);
+        }
+
+        // Call each existing participant
+        for (const userId of otherParticipantIds) {
+          const remotePeerId = `fp-${userId}`;
+          const mediaConn = callPeer(remotePeerId, stream);
+          if (mediaConn) {
+            wireMediaConnection(mediaConn, stream);
+          }
         }
       }
 
+      // Data channel for in-call chat
       onIncomingData((conn: DataConnection) => {
         conn.on("data", (data) => {
           const msg = data as { senderId: string; senderName: string; content: string };
@@ -130,8 +171,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     else await call.startScreenShare();
   }, [call]);
 
-  // Get the other person's name for status display
-  const getOtherName = () => {
+  // Get display name for status overlay
+  const getCallDisplayName = () => {
+    if (conversation.type === "group") return conversation.name || "Group Call";
     const other = conversation.participants.find(
       (p) => typeof p === "object" && (p as IUser)._id !== currentUser.userId
     ) as IUser | undefined;
@@ -146,9 +188,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       {showStatusOverlay && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/95">
           <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">
-            <span className="text-3xl font-bold text-primary">{getOtherName().charAt(0).toUpperCase()}</span>
+            <span className="text-3xl font-bold text-primary">{getCallDisplayName().charAt(0).toUpperCase()}</span>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">{getOtherName()}</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">{getCallDisplayName()}</h2>
           <div className="flex items-center gap-2 text-gray-400">
             {call.callState === "ringing" && (
               <>

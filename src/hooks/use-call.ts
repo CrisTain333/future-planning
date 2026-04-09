@@ -165,6 +165,17 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
     setCallState("idle");
   }, [participants, localStream, screenStream, callLog, onCallEnded]);
 
+  const removeParticipant = useCallback((peerId: string) => {
+    setParticipants((prev) => {
+      const participant = prev.find((p) => p.peerId === peerId);
+      if (participant) {
+        participant.mediaConnection?.close();
+        participant.dataConnection?.close();
+      }
+      return prev.filter((p) => p.peerId !== peerId);
+    });
+  }, []);
+
   const addInCallMessage = useCallback((msg: InCallMessage) => {
     setInCallMessages((prev) => [...prev, msg]);
   }, []);
@@ -197,6 +208,7 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
     initiateCall,
     acceptCall,
     endCall,
+    removeParticipant,
     addInCallMessage,
   };
 }
