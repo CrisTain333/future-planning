@@ -89,13 +89,13 @@ export function CalendarMonthView({
   }, [meetings]);
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden">
+    <div>
       {/* Day headers */}
-      <div className="grid grid-cols-7 border-b border-white/20">
+      <div className="grid grid-cols-7 border-b border-border">
         {DAY_HEADERS.map((day) => (
           <div
             key={day}
-            className="py-2 text-center text-xs font-medium text-muted-foreground"
+            className="py-2 text-center text-xs font-medium text-muted-foreground border-r border-border last:border-r-0"
           >
             {day}
           </div>
@@ -108,13 +108,17 @@ export function CalendarMonthView({
           const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
           const dayMeetings = meetingsByDate[key] ?? [];
           const isToday = isSameDay(date, today);
+          const isLastCol = (idx + 1) % 7 === 0;
+          const isLastRow = idx >= calendarDays.length - 7;
 
           return (
             <div
               key={idx}
               className={cn(
-                "min-h-[100px] border-b border-r border-white/10 p-1.5 cursor-pointer transition-colors hover:bg-white/5",
-                !isCurrentMonth && "opacity-40"
+                "h-[110px] border-b border-r border-border p-1.5 cursor-pointer transition-colors hover:bg-accent/30",
+                !isCurrentMonth && "bg-muted/30 text-muted-foreground",
+                isLastCol && "border-r-0",
+                isLastRow && "border-b-0"
               )}
               onClick={() => onDayClick(date)}
             >
