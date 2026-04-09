@@ -135,6 +135,12 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
   const endCall = useCallback(async () => {
     if (missedTimeoutRef.current) clearTimeout(missedTimeoutRef.current);
 
+    // Close all PeerJS media/data connections (triggers "close" on the other side)
+    participants.forEach((p) => {
+      p.mediaConnection?.close();
+      p.dataConnection?.close();
+    });
+
     localStream?.getTracks().forEach((track) => track.stop());
     screenStream?.getTracks().forEach((track) => track.stop());
 
@@ -143,7 +149,7 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "ended" }),
-      });
+      }).catch(() => {});
     }
 
     setLocalStream(null);
@@ -157,7 +163,7 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
     setCallLog(null);
     onCallEnded?.();
     setCallState("idle");
-  }, [localStream, screenStream, callLog, onCallEnded]);
+  }, [participants, localStream, screenStream, callLog, onCallEnded]);
 
   const addInCallMessage = useCallback((msg: InCallMessage) => {
     setInCallMessages((prev) => [...prev, msg]);
