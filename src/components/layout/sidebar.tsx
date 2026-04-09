@@ -17,11 +17,11 @@ import {
   UserCircle,
   Landmark,
   Video,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Drawer, Button } from "antd";
-import { Menu } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const memberLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -45,17 +45,14 @@ const adminLinks = [
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
-function SidebarContent({ onClick }: { onClick?: () => void }) {
+function SidebarNav({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = (session?.user as { role?: string })?.role;
   const links = role === "admin" ? adminLinks : memberLinks;
 
   return (
-    <nav className="flex flex-col gap-1 p-4">
-      <div className="mb-6 px-2">
-        <h2 className="text-lg font-bold text-primary">Future Planning</h2>
-      </div>
+    <div className="flex flex-col gap-1">
       {links.map((link) => {
         const isActive = pathname === link.href;
         return (
@@ -64,10 +61,10 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
             href={link.href}
             onClick={onClick}
             className={cn(
-               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-               isActive
-               ? "bg-primary text-primary-foreground"
-               : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              isActive
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             )}
           >
             <link.icon className="h-4 w-4" />
@@ -75,14 +72,19 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
           </Link>
         );
       })}
-    </nav>
+    </div>
   );
 }
 
 export function Sidebar() {
   return (
     <aside className="hidden md:flex md:w-64 md:flex-col h-screen sticky top-0 glass-sidebar">
-      <SidebarContent />
+      <nav className="flex flex-col gap-1 p-4">
+        <div className="mb-6 px-2">
+          <h2 className="text-lg font-bold text-primary">Future Planning</h2>
+        </div>
+        <SidebarNav />
+      </nav>
     </aside>
   );
 }
@@ -90,24 +92,58 @@ export function Sidebar() {
 export function MobileSidebar() {
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
-    <>
-      <Button
-        type="text"
-        className="md:hidden inline-flex items-center justify-center h-10 w-10 p-0"
+    <div className="md:hidden">
+      <button
         onClick={() => setOpen(true)}
-        icon={<Menu className="h-5 w-5" />}
-      />
-      <Drawer
-        placement="left"
-        onClose={() => setOpen(false)}
-        open={open}
-        size="default"
-        styles={{ body: { padding: 0 } }}
-        closable={false}
+        className="inline-flex items-center justify-center h-10 w-10 rounded-lg hover:bg-accent/50 transition-colors"
       >
-        <SidebarContent onClick={() => setOpen(false)} />
-      </Drawer>
-    </>
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Backdrop */}
+      <div
+        className={cn(
+          "fixed inset-0 z-[60] bg-black/50 transition-opacity duration-300",
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Sidebar panel */}
+      <aside
+        className={cn(
+          "fixed top-0 left-0 z-[70] h-full w-64 bg-white shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-primary">Future Planning</h2>
+          <button
+            onClick={() => setOpen(false)}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="h-4 w-4 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto p-4">
+          <SidebarNav onClick={() => setOpen(false)} />
+        </nav>
+      </aside>
+    </div>
   );
 }
