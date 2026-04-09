@@ -10,6 +10,7 @@ import dayjs from "dayjs";
 
 interface AttendanceTabProps {
   meeting: IMeeting;
+  readOnly?: boolean;
 }
 
 const STATUS_OPTIONS = [
@@ -28,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 type AttendanceStatus = IAttendanceRecord["status"];
 
-export function AttendanceTab({ meeting }: AttendanceTabProps) {
+export function AttendanceTab({ meeting, readOnly }: AttendanceTabProps) {
   const [localAttendance, setLocalAttendance] = useState<IAttendanceRecord[]>(
     () => meeting.attendance ?? []
   );
@@ -106,7 +107,7 @@ export function AttendanceTab({ meeting }: AttendanceTabProps) {
           options={STATUS_OPTIONS}
           size="small"
           className="w-full"
-          disabled={isLoading}
+          disabled={readOnly || isLoading}
         />
       ),
     },
@@ -169,22 +170,24 @@ export function AttendanceTab({ meeting }: AttendanceTabProps) {
       </div>
 
       {/* Bulk Actions */}
-      <div className="flex gap-2">
-        <Button
-          size="small"
-          onClick={() => handleBulkUpdate("present")}
-          loading={isLoading}
-        >
-          Mark All Present
-        </Button>
-        <Button
-          size="small"
-          onClick={() => handleBulkUpdate("absent")}
-          loading={isLoading}
-        >
-          Mark All Absent
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-2">
+          <Button
+            size="small"
+            onClick={() => handleBulkUpdate("present")}
+            loading={isLoading}
+          >
+            Mark All Present
+          </Button>
+          <Button
+            size="small"
+            onClick={() => handleBulkUpdate("absent")}
+            loading={isLoading}
+          >
+            Mark All Absent
+          </Button>
+        </div>
+      )}
 
       {/* Table */}
       <Table

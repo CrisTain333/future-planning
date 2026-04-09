@@ -14,6 +14,7 @@ interface CalendarHeaderProps {
   onToday: () => void;
   onNewMeeting: () => void;
   title: string;
+  readOnly?: boolean;
 }
 
 export function CalendarHeader({
@@ -24,6 +25,7 @@ export function CalendarHeader({
   onToday,
   onNewMeeting,
   title,
+  readOnly,
 }: CalendarHeaderProps) {
   return (
     <div className="space-y-4">
@@ -38,14 +40,16 @@ export function CalendarHeader({
             Schedule and manage foundation meetings
           </p>
         </div>
-        <Button
-          type="primary"
-          className="glow-primary gap-2"
-          icon={<Plus className="h-4 w-4" />}
-          onClick={onNewMeeting}
-        >
-          New Meeting
-        </Button>
+        {!readOnly && (
+          <Button
+            type="primary"
+            className="glow-primary gap-2"
+            icon={<Plus className="h-4 w-4" />}
+            onClick={onNewMeeting}
+          >
+            New Meeting
+          </Button>
+        )}
       </div>
 
       {/* Calendar Controls Bar */}

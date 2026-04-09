@@ -25,7 +25,7 @@ import { useState } from "react";
 
 const memberLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/dashboard/meetings", label: "My Meetings", icon: Video },
+  { href: "/dashboard/meetings", label: "Meetings", icon: Video },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 

@@ -21,6 +21,7 @@ import dayjs from "dayjs";
 
 interface MinutesTabProps {
   meeting: IMeeting;
+  readOnly?: boolean;
 }
 
 interface AgendaItemForm {
@@ -36,9 +37,10 @@ interface ActionItemForm {
   status: "pending" | "done";
 }
 
-export function MinutesTab({ meeting }: MinutesTabProps) {
+export function MinutesTab({ meeting, readOnly }: MinutesTabProps) {
   const minutes = meeting.minutes;
   const isFinalized = minutes?.status === "finalized";
+  const isDisabled = readOnly || isFinalized;
 
   const [mode, setMode] = useState<"structured" | "freeform">(
     minutes?.mode ?? "structured"
@@ -195,7 +197,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
         ]}
         value={mode}
         onChange={(val) => setMode(val as "structured" | "freeform")}
-        disabled={isFinalized}
+        disabled={isDisabled}
       />
 
       {mode === "freeform" ? (
@@ -205,7 +207,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
           onChange={(e) => setFreeformContent(e.target.value)}
           placeholder="Type meeting minutes here..."
           rows={12}
-          disabled={isFinalized}
+          disabled={isDisabled}
         />
       ) : (
         /* Structured Mode */
@@ -226,7 +228,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
                   }
                   placeholder="Discussion notes..."
                   rows={2}
-                  disabled={isFinalized}
+                  disabled={isDisabled}
                 />
                 <Input.TextArea
                   value={item.decision}
@@ -235,7 +237,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
                   }
                   placeholder="Decision made..."
                   rows={1}
-                  disabled={isFinalized}
+                  disabled={isDisabled}
                 />
               </div>
             ))}
@@ -245,7 +247,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold">Decisions</h4>
-              {!isFinalized && (
+              {!isDisabled && (
                 <Button
                   type="text"
                   size="small"
@@ -268,9 +270,9 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
                   onChange={(e) => updateDecision(idx, e.target.value)}
                   placeholder="Decision..."
                   size="small"
-                  disabled={isFinalized}
+                  disabled={isDisabled}
                 />
-                {!isFinalized && (
+                {!isDisabled && (
                   <Button
                     type="text"
                     size="small"
@@ -287,7 +289,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold">Action Items</h4>
-              {!isFinalized && (
+              {!isDisabled && (
                 <Button
                   type="text"
                   size="small"
@@ -316,13 +318,13 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
                     }
                     placeholder="Action item title..."
                     size="small"
-                    disabled={isFinalized}
+                    disabled={isDisabled}
                     className="flex-1"
                   />
                   <Tag color={ai.status === "done" ? "green" : "gold"}>
                     {ai.status === "done" ? "Done" : "Pending"}
                   </Tag>
-                  {!isFinalized && (
+                  {!isDisabled && (
                     <Button
                       type="text"
                       size="small"
@@ -340,7 +342,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
                     placeholder="Assignee"
                     size="small"
                     className="flex-1"
-                    disabled={isFinalized}
+                    disabled={isDisabled}
                   />
                   <DatePicker
                     value={ai.dueDate ? dayjs(ai.dueDate) : null}
@@ -352,7 +354,7 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
                       )
                     }
                     size="small"
-                    disabled={isFinalized}
+                    disabled={isDisabled}
                   />
                 </div>
               </div>
@@ -362,40 +364,42 @@ export function MinutesTab({ meeting }: MinutesTabProps) {
       )}
 
       {/* Bottom Actions */}
-      <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-        {!isFinalized && (
-          <>
-            <Button onClick={() => handleSave(false)} loading={isSaving}>
-              Save Draft
-            </Button>
-            <Popconfirm
-              title="Finalize these minutes?"
-              description="Once finalized, minutes cannot be edited."
-              onConfirm={() => handleSave(true)}
-              okText="Finalize"
-              cancelText="Cancel"
-            >
-              <Button
-                type="primary"
-                style={{ backgroundColor: "#40916c", borderColor: "#40916c" }}
-                loading={isSaving}
-              >
-                Finalize Minutes
+      {!readOnly && (
+        <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+          {!isFinalized && (
+            <>
+              <Button onClick={() => handleSave(false)} loading={isSaving}>
+                Save Draft
               </Button>
-            </Popconfirm>
-          </>
-        )}
-        {isFinalized && (
-          <Button
-            type="primary"
-            style={{ backgroundColor: "#40916c", borderColor: "#40916c" }}
-            onClick={handleSend}
-            loading={isSending}
-          >
-            Send to Invitees
-          </Button>
-        )}
-      </div>
+              <Popconfirm
+                title="Finalize these minutes?"
+                description="Once finalized, minutes cannot be edited."
+                onConfirm={() => handleSave(true)}
+                okText="Finalize"
+                cancelText="Cancel"
+              >
+                <Button
+                  type="primary"
+                  style={{ backgroundColor: "#40916c", borderColor: "#40916c" }}
+                  loading={isSaving}
+                >
+                  Finalize Minutes
+                </Button>
+              </Popconfirm>
+            </>
+          )}
+          {isFinalized && (
+            <Button
+              type="primary"
+              style={{ backgroundColor: "#40916c", borderColor: "#40916c" }}
+              onClick={handleSend}
+              loading={isSending}
+            >
+              Send to Invitees
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

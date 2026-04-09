@@ -10,9 +10,10 @@ import dayjs from "dayjs";
 
 interface ActionItemsTabProps {
   meeting: IMeeting;
+  readOnly?: boolean;
 }
 
-export function ActionItemsTab({ meeting }: ActionItemsTabProps) {
+export function ActionItemsTab({ meeting, readOnly }: ActionItemsTabProps) {
   const actionItems: IActionItem[] = meeting.minutes?.actionItems ?? [];
   const [updateActionItem, { isLoading }] = useUpdateActionItemMutation();
 
@@ -98,20 +99,24 @@ export function ActionItemsTab({ meeting }: ActionItemsTabProps) {
           <Tag color="gold">Pending</Tag>
         ),
     },
-    {
-      title: "",
-      key: "action",
-      width: 100,
-      render: (_: unknown, record: IActionItem) => (
-        <Button
-          size="small"
-          onClick={() => handleToggleStatus(record)}
-          loading={isLoading}
-        >
-          {record.status === "done" ? "Undo" : "Mark Done"}
-        </Button>
-      ),
-    },
+    ...(!readOnly
+      ? [
+          {
+            title: "",
+            key: "action",
+            width: 100,
+            render: (_: unknown, record: IActionItem) => (
+              <Button
+                size="small"
+                onClick={() => handleToggleStatus(record)}
+                loading={isLoading}
+              >
+                {record.status === "done" ? "Undo" : "Mark Done"}
+              </Button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   if (actionItems.length === 0) {

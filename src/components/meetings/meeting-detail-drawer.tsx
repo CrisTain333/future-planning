@@ -34,6 +34,7 @@ interface MeetingDetailDrawerProps {
   meetingId: string | null;
   onClose: () => void;
   onEdit: (meeting: IMeeting) => void;
+  readOnly?: boolean;
 }
 
 const TYPE_TAG_COLORS: Record<string, string> = {
@@ -72,6 +73,7 @@ export function MeetingDetailDrawer({
   meetingId,
   onClose,
   onEdit,
+  readOnly,
 }: MeetingDetailDrawerProps) {
   const [cancelReason, setCancelReason] = useState("");
 
@@ -146,17 +148,17 @@ export function MeetingDetailDrawer({
     {
       key: "minutes",
       label: "Minutes",
-      children: <MinutesTab meeting={meeting!} />,
+      children: <MinutesTab meeting={meeting!} readOnly={readOnly} />,
     },
     {
       key: "attendance",
       label: "Attendance",
-      children: <AttendanceTab meeting={meeting!} />,
+      children: <AttendanceTab meeting={meeting!} readOnly={readOnly} />,
     },
     {
       key: "action-items",
       label: "Action Items",
-      children: <ActionItemsTab meeting={meeting!} />,
+      children: <ActionItemsTab meeting={meeting!} readOnly={readOnly} />,
     },
   ];
 
@@ -268,7 +270,7 @@ export function MeetingDetailDrawer({
           </div>
 
           {/* Actions Footer */}
-          {!isCancelled && !isCompleted && (
+          {!readOnly && !isCancelled && !isCompleted && (
             <div className="p-4 border-t border-white/20 flex items-center gap-2">
               <Button
                 icon={<Pencil className="h-4 w-4" />}
