@@ -9,6 +9,7 @@ import { MessageBubble } from "./message-bubble";
 import { MessageInput } from "./message-input";
 import { TypingIndicator } from "./typing-indicator";
 import toast from "react-hot-toast";
+import { playMessageSent } from "@/lib/sounds";
 
 interface ChatWindowProps {
   conversation: IConversation;
@@ -48,10 +49,31 @@ export function ChatWindow({ conversation, presenceMap, typingUsers, newMessages
   }, [conversation._id, markRead]);
 
   const handleSend = useCallback(async (content: string, replyToId?: string) => {
+    // Optimistic: show message immediately
+    const optimisticMsg: IMessage = {
+      _id: `temp-${Date.now()}`,
+      conversationId: conversation._id,
+      senderId: { _id: currentUserId, fullName: (session?.user as unknown as { fullName: string })?.fullName || "" } as unknown as IUser,
+      content,
+      type: "text",
+      replyTo: null,
+      readBy: [],
+      isDeleted: false,
+      deletedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setAllMessages((prev) => [...prev, optimisticMsg]);
+    playMessageSent();
+
     try {
       await sendMessage({ conversationId: conversation._id, body: { content, type: "text", replyTo: replyToId } }).unwrap();
-    } catch { toast.error("Failed to send message"); }
-  }, [sendMessage, conversation._id]);
+    } catch {
+      // Remove optimistic message on failure
+      setAllMessages((prev) => prev.filter((m) => m._id !== optimisticMsg._id));
+      toast.error("Failed to send message");
+    }
+  }, [sendMessage, conversation._id, currentUserId, session]);
 
   const handleDelete = useCallback(async (messageId: string) => {
     try {

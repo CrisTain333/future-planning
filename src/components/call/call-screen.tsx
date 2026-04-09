@@ -9,6 +9,7 @@ import { CallControls } from "./call-controls";
 import { ParticipantGrid } from "./participant-grid";
 import { InCallChat } from "./in-call-chat";
 import { MediaConnection, DataConnection } from "peerjs";
+import { playCallConnected, playCallEnded } from "@/lib/sounds";
 
 interface CallScreenProps {
   callLog: ICallLog;
@@ -23,7 +24,12 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const { callPeer, connectData, onIncomingCall, onIncomingData, closeAllConnections } = usePeer({ userId: currentUser.userId });
-  const call = useCall({ onCallEnded: onClose });
+  const call = useCall({
+    onCallEnded: () => {
+      playCallEnded();
+      onClose();
+    },
+  });
 
   useEffect(() => {
     const setup = async () => {
@@ -47,6 +53,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         });
       } else {
         await call.acceptCall(callLog);
+        playCallConnected();
         const initiatorId = typeof callLog.initiatedBy === "object" ? (callLog.initiatedBy as IUser)._id : callLog.initiatedBy;
         const remotePeerId = `fp-${initiatorId}`;
         const mediaConn = callPeer(remotePeerId, stream);

@@ -124,20 +124,20 @@ export async function POST(
       .populate("senderId", "fullName profilePicture username")
       .populate("replyTo", "content senderId");
 
-    // Notify other participants
+    // Fire-and-forget notifications (don't block the response)
     const senderUser = await User.findById(currentUser.userId, "fullName");
     const otherParticipantIds = conversation.participants
       .map((p: mongoose.Types.ObjectId) => p.toString())
       .filter((pid: string) => pid !== currentUser.userId);
 
     if (otherParticipantIds.length > 0 && senderUser) {
-      await notifyNewMessage(
+      notifyNewMessage(
         currentUser.userId,
         senderUser.fullName,
         otherParticipantIds,
         id,
         content
-      );
+      ).catch(() => {});
     }
 
     return NextResponse.json({ success: true, data: populated }, { status: 201 });

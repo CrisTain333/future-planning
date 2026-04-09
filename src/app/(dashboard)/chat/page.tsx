@@ -16,6 +16,7 @@ import { IncomingCall } from "@/components/call/incoming-call";
 import { CallScreen } from "@/components/call/call-screen";
 import { MessageCircle } from "lucide-react";
 import toast from "react-hot-toast";
+import { playMessageReceived, playCallRinging } from "@/lib/sounds";
 
 function ChatPageContent() {
   const { data: session } = useSession();
@@ -55,8 +56,14 @@ function ChatPageContent() {
   }, [presenceList]);
 
   const handleMessages = useCallback((msgs: IMessage[]) => {
+    // Play sound for messages from others
+    const hasNewFromOthers = msgs.some((m) => {
+      const senderId = typeof m.senderId === "object" ? (m.senderId as IUser)._id : m.senderId;
+      return senderId !== currentUserId;
+    });
+    if (hasNewFromOthers) playMessageReceived();
     setNewMessages((prev) => [...prev, ...msgs]);
-  }, []);
+  }, [currentUserId]);
 
   const handlePresence = useCallback((presence: IPresence[]) => {
     setPresenceList(presence);
@@ -76,6 +83,7 @@ function ChatPageContent() {
             : c.initiatedBy) !== currentUserId
       );
       if (ringingCall && !activeCall) {
+        playCallRinging();
         setIncomingCall(ringingCall);
       }
     },
