@@ -43,6 +43,25 @@ function ChatPageContent() {
 
   usePush();
 
+  // Hide parent scroll and footer for full-height chat layout
+  useEffect(() => {
+    const main = document.querySelector("main");
+    const footer = document.querySelector("footer");
+    if (main) {
+      main.style.overflow = "hidden";
+      main.style.padding = "0";
+    }
+    if (footer) (footer as HTMLElement).style.display = "none";
+
+    return () => {
+      if (main) {
+        main.style.overflow = "";
+        main.style.padding = "";
+      }
+      if (footer) (footer as HTMLElement).style.display = "";
+    };
+  }, []);
+
   // Heartbeat every 30 seconds
   useEffect(() => {
     heartbeat({});
@@ -149,7 +168,7 @@ function ChatPageContent() {
   }, [activeConversationId, ongoingCalls, activeCall]);
 
   return (
-    <div className="-m-4 md:-m-6 h-[calc(100vh-3.5rem)] flex overflow-hidden">
+    <div className="h-[calc(100vh-3.5rem)] flex overflow-hidden">
       <div className="w-80 flex-shrink-0 hidden md:flex md:flex-col border-r border-gray-200 bg-white">
         <ChatSidebar
           activeConversationId={activeConversationId}
@@ -198,7 +217,7 @@ function ChatPageContent() {
 export default function ChatPage() {
   return (
     <Suspense fallback={
-      <div className="-m-4 md:-m-6 h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#f0f2f5]">
+      <div className="h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#f0f2f5]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(181,87%,31%)]" />
       </div>
     }>
