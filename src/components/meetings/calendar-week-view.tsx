@@ -229,16 +229,8 @@ export function CalendarWeekView({
                 className="absolute z-10 pointer-events-none"
                 style={{
                   top: timeLineTop,
-                  left: `calc(60px + ${(timeLineDayIndex / 7) * 100}% * (1 - 60px / 100%))`,
-                  width: `calc(100% / 7 - 60px / 7)`,
-                  // Precise column positioning
-                  ...((() => {
-                    const colWidth = `calc((100% - 60px) / 7)`;
-                    return {
-                      left: `calc(60px + ${timeLineDayIndex} * ${colWidth})`,
-                      width: colWidth,
-                    };
-                  })()),
+                  left: `calc(60px + ${timeLineDayIndex} * ((100% - 60px) / 7))`,
+                  width: `calc((100% - 60px) / 7)`,
                 }}
               >
                 <div className="relative flex items-center">
