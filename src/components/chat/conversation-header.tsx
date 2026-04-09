@@ -84,17 +84,17 @@ export function ConversationHeader({ conversation, currentUserId, presenceMap, o
       <div className="flex items-center gap-1">
         <button
           onClick={onAudioCall}
-          className="h-9 w-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-[hsl(181,87%,31%)]/10 hover:text-[hsl(181,87%,31%)] transition-all duration-200"
+          className="h-10 w-10 rounded-full flex items-center justify-center text-[hsl(181,87%,31%)] hover:bg-[hsl(181,87%,31%)]/10 transition-all duration-200"
           title="Audio call"
         >
-          <Phone className="h-4 w-4" />
+          <Phone className="h-[22px] w-[22px]" strokeWidth={2.5} />
         </button>
         <button
           onClick={onVideoCall}
-          className="h-9 w-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-[hsl(181,87%,31%)]/10 hover:text-[hsl(181,87%,31%)] transition-all duration-200"
+          className="h-10 w-10 rounded-full flex items-center justify-center text-[hsl(181,87%,31%)] hover:bg-[hsl(181,87%,31%)]/10 transition-all duration-200"
           title="Video call"
         >
-          <Video className="h-4 w-4" />
+          <Video className="h-[22px] w-[22px]" strokeWidth={2.5} />
         </button>
       </div>
     </div>

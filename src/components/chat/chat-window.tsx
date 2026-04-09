@@ -114,8 +114,8 @@ export function ChatWindow({ conversation, presenceMap, typingUsers, newMessages
         onBack={onBack}
       />
 
-      {/* Ongoing call banner */}
-      {ongoingCall && onJoinCall && (
+      {/* Ongoing call banner — only for group conversations */}
+      {ongoingCall && onJoinCall && conversation.type === "group" && (
         <div className="mx-2 md:mx-3 mt-2 flex items-center justify-between rounded-2xl bg-emerald-50 border border-emerald-200 px-3 md:px-4 py-2 md:py-2.5 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center">
