@@ -82,6 +82,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Only admins can create group conversations
+    if (parsed.data.type === "group" && currentUser.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Only admins can create group chats" },
+        { status: 403 }
+      );
+    }
+
     const { type, name, participants } = parsed.data;
 
     // Ensure creator is always in participants

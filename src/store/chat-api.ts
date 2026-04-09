@@ -2,6 +2,7 @@ import { api } from "./api";
 import {
   IConversation,
   IMessage,
+  IUser,
   SyncResponse,
   ApiResponse,
   PaginatedResponse,
@@ -107,6 +108,9 @@ export const chatApi = api.injectEndpoints({
         params: { since },
       }),
     }),
+    getChatMembers: builder.query<ApiResponse<IUser[]>, void>({
+      query: () => "/conversations/members",
+    }),
     heartbeat: builder.mutation<ApiResponse<null>, HeartbeatBody>({
       query: (body) => ({
         url: "/realtime/heartbeat",
@@ -125,6 +129,7 @@ export const {
   useSendMessageMutation,
   useDeleteMessageMutation,
   useMarkConversationReadMutation,
+  useGetChatMembersQuery,
   useLazySyncQuery,
   useHeartbeatMutation,
 } = chatApi;

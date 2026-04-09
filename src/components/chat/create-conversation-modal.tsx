@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { Modal, Select, Input, Radio } from "antd";
-import { useGetUsersQuery } from "@/store/users-api";
-import { useCreateConversationMutation } from "@/store/chat-api";
+import { useGetChatMembersQuery, useCreateConversationMutation } from "@/store/chat-api";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { IUser } from "@/types";
@@ -20,10 +19,12 @@ export function CreateConversationModal({ open, onClose, onCreated }: CreateConv
   const [groupName, setGroupName] = useState("");
   const { data: session } = useSession();
   const currentUserId = (session?.user as unknown as { userId: string })?.userId;
+  const userRole = (session?.user as unknown as { role: string })?.role;
+  const isAdmin = userRole === "admin";
 
-  const { data: usersData } = useGetUsersQuery({ page: 1, limit: 100 });
-  const users = ((usersData as { data?: IUser[] })?.data || []).filter(
-    (u: IUser) => u._id !== currentUserId && !u.isDisabled
+  const { data: membersData } = useGetChatMembersQuery();
+  const members = (membersData?.data || []).filter(
+    (u: IUser) => u._id !== currentUserId
   );
 
   const [createConversation, { isLoading }] = useCreateConversationMutation();
@@ -59,14 +60,17 @@ export function CreateConversationModal({ open, onClose, onCreated }: CreateConv
   return (
     <Modal title="New Conversation" open={open} onOk={handleCreate} onCancel={handleClose} confirmLoading={isLoading} okText="Start Chat">
       <div className="space-y-4 mt-4">
-        <div>
-          <label className="text-sm font-medium mb-1 block">Type</label>
-          <Radio.Group value={type} onChange={(e) => setType(e.target.value)}>
-            <Radio value="direct">Direct Message</Radio>
-            <Radio value="group">Group Chat</Radio>
-          </Radio.Group>
-        </div>
-        {type === "group" && (
+        {/* Only admins can create group chats */}
+        {isAdmin && (
+          <div>
+            <label className="text-sm font-medium mb-1 block">Type</label>
+            <Radio.Group value={type} onChange={(e) => setType(e.target.value)}>
+              <Radio value="direct">Direct Message</Radio>
+              <Radio value="group">Group Chat</Radio>
+            </Radio.Group>
+          </div>
+        )}
+        {type === "group" && isAdmin && (
           <div>
             <label className="text-sm font-medium mb-1 block">Group Name</label>
             <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Enter group name" maxLength={100} />
@@ -82,7 +86,7 @@ export function CreateConversationModal({ open, onClose, onCreated }: CreateConv
             showSearch
             optionFilterProp="label"
             className="w-full"
-            options={users.map((u: IUser) => ({ value: u._id, label: u.fullName }))}
+            options={members.map((u: IUser) => ({ value: u._id, label: u.fullName }))}
           />
         </div>
       </div>
