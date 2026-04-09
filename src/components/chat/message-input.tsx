@@ -21,6 +21,16 @@ export function MessageInput({ onSend, onTyping, replyTo, onCancelReply, disable
     if (replyTo) inputRef.current?.focus();
   }, [replyTo]);
 
+  // Auto-grow textarea up to 4 lines
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    const lineHeight = 20;
+    const maxHeight = lineHeight * 4 + 20; // 4 lines + padding
+    el.style.height = Math.min(el.scrollHeight, maxHeight) + "px";
+  }, [content]);
+
   const handleSend = () => {
     const trimmed = content.trim();
     if (!trimmed) return;
@@ -29,6 +39,8 @@ export function MessageInput({ onSend, onTyping, replyTo, onCancelReply, disable
     onCancelReply();
     onTyping(false);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    // Reset textarea height
+    if (inputRef.current) inputRef.current.style.height = "auto";
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -48,33 +60,46 @@ export function MessageInput({ onSend, onTyping, replyTo, onCancelReply, disable
   const replyAuthor = replyTo && typeof replyTo.senderId === "object" ? (replyTo.senderId as IUser).fullName : "";
 
   return (
-    <div className="border-t border-gray-200 p-3">
+    <div className="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
+      {/* Reply preview strip */}
       {replyTo && (
-        <div className="flex items-center justify-between mb-2 px-2 py-1 rounded bg-gray-50 border-l-2 border-primary">
-          <span className="text-xs text-muted-foreground truncate">
-            Replying to <strong>{replyAuthor}</strong>: {replyTo.content}
-          </span>
-          <button onClick={onCancelReply} className="p-0.5 hover:bg-gray-200 rounded">
-            <X className="h-3 w-3" />
+        <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-gray-50 border-l-[3px] border-l-[hsl(181,87%,31%)]">
+          <div className="flex-1 min-w-0">
+            <span className="text-xs font-medium text-[hsl(181,87%,31%)] block">
+              Replying to {replyAuthor}
+            </span>
+            <span className="text-xs text-gray-500 truncate block">{replyTo.content}</span>
+          </div>
+          <button
+            onClick={onCancelReply}
+            className="flex-shrink-0 h-5 w-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-all duration-200"
+          >
+            <X className="h-3 w-3 text-gray-600" />
           </button>
         </div>
       )}
+
+      {/* Input row */}
       <div className="flex items-end gap-2">
-        <textarea
-          ref={inputRef}
-          value={content}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          disabled={disabled}
-          rows={1}
-          className="flex-1 resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
-          style={{ maxHeight: 120 }}
-        />
+        <div className="flex-1 bg-gray-100 rounded-3xl px-4 py-2.5 flex items-end gap-2 min-h-[44px]">
+          <textarea
+            ref={inputRef}
+            value={content}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message..."
+            disabled={disabled}
+            rows={1}
+            className="flex-1 resize-none bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none disabled:opacity-50 leading-5 max-h-[100px]"
+            style={{ height: "20px" }}
+          />
+        </div>
         <button
           onClick={handleSend}
           disabled={!content.trim() || disabled}
-          className="flex-shrink-0 h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          className="flex-shrink-0 h-11 w-11 rounded-full bg-[hsl(181,87%,31%)] text-white flex items-center justify-center
+            hover:bg-[hsl(181,87%,26%)] disabled:opacity-40 disabled:cursor-not-allowed
+            transition-all duration-200 shadow-sm hover:shadow-md"
         >
           <Send className="h-4 w-4" />
         </button>

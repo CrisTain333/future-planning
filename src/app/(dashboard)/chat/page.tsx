@@ -149,8 +149,8 @@ function ChatPageContent() {
   }, [activeConversationId, ongoingCalls, activeCall]);
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex">
-      <div className="w-80 flex-shrink-0 hidden md:block">
+    <div className="-m-4 md:-m-6 h-[calc(100vh-3.5rem)] flex overflow-hidden">
+      <div className="w-80 flex-shrink-0 hidden md:flex md:flex-col border-r border-gray-200 bg-white">
         <ChatSidebar
           activeConversationId={activeConversationId}
           onSelectConversation={setActiveConversationId}
@@ -158,7 +158,7 @@ function ChatPageContent() {
           presenceMap={presenceMap}
         />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {activeConversation ? (
           <ChatWindow
             conversation={activeConversation}
@@ -171,9 +171,16 @@ function ChatPageContent() {
             onJoinCall={handleJoinCall}
           />
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-            <MessageCircle className="h-12 w-12 mb-4 opacity-30" />
-            <p className="text-sm">Select a conversation to start chatting</p>
+          <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] text-muted-foreground">
+            <div className="flex flex-col items-center gap-4 max-w-xs text-center">
+              <div className="h-20 w-20 rounded-full bg-white shadow-sm flex items-center justify-center">
+                <MessageCircle className="h-10 w-10 text-[hsl(181,87%,31%)] opacity-60" />
+              </div>
+              <div>
+                <p className="text-base font-medium text-gray-700">Your Messages</p>
+                <p className="text-sm text-gray-400 mt-1">Select a conversation to start chatting</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -190,7 +197,11 @@ function ChatPageContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="h-[calc(100vh-4rem)] flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+    <Suspense fallback={
+      <div className="-m-4 md:-m-6 h-[calc(100vh-3.5rem)] flex items-center justify-center bg-[#f0f2f5]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(181,87%,31%)]" />
+      </div>
+    }>
       <ChatPageContent />
     </Suspense>
   );
