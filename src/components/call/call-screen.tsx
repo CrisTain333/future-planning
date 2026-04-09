@@ -42,36 +42,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const isGroupRef = useRef(isGroupCall);
   isGroupRef.current = isGroupCall;
 
-  // Poll call status to detect when other side hangs up
-  // Require 3 consecutive misses to avoid false positives from network glitches
-  const missCountRef = useRef(0);
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `/api/realtime/sync?since=${encodeURIComponent(new Date(Date.now() - 5000).toISOString())}`
-        );
-        if (!res.ok) return;
-        const json = await res.json();
-        if (!json.success) return;
-
-        const activeCalls = json.data.calls as ICallLog[];
-        const thisCall = activeCalls.find((c) => c._id === callLog._id);
-        const state = callRef.current.callState;
-
-        if (!thisCall && (state === "active" || state === "ringing" || state === "connecting")) {
-          missCountRef.current++;
-          if (missCountRef.current >= 3) {
-            callRef.current.endCall();
-          }
-        } else {
-          missCountRef.current = 0;
-        }
-      } catch {}
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [callLog._id]);
+  // Call end detection relies on PeerJS media connection "close" event
+  // (set up in wireMedia). No polling needed — it was causing false auto-cuts.
 
   // Resolve user info from a PeerJS peer ID or userId
   const resolveUserByUserId = (userId: string) => {
