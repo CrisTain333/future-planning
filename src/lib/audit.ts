@@ -19,7 +19,15 @@ type AuditAction =
   | "profile_picture_updated"
   | "password_changed"
   | "user_login"
-  | "user_login_failed";
+  | "user_login_failed"
+  | "google_connected"
+  | "google_disconnected"
+  | "meeting_created"
+  | "meeting_updated"
+  | "meeting_cancelled"
+  | "attendance_marked"
+  | "minutes_updated"
+  | "action_item_updated";
 
 export async function createAuditLog(
   action: AuditAction,
