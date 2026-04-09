@@ -8,6 +8,7 @@ interface SyncData {
   presence: IPresence[];
   typing: IPresence[];
   calls: ICallLog[];
+  serverTime?: string;
 }
 
 interface UsePollingOptions {
