@@ -15,8 +15,26 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
   const mediaConnectionsRef = useRef<Map<string, MediaConnection>>(new Map());
   const dataConnectionsRef = useRef<Map<string, DataConnection>>(new Map());
 
+  // Queue handlers until peer is ready
+  const callHandlerRef = useRef<((call: MediaConnection) => void) | null>(null);
+  const dataHandlerRef = useRef<((conn: DataConnection) => void) | null>(null);
+  const readyResolversRef = useRef<Array<(peer: Peer) => void>>([]);
+
+  // Returns a promise that resolves when peer is open
+  const waitForPeer = useCallback((): Promise<Peer> => {
+    if (peerRef.current?.open) return Promise.resolve(peerRef.current);
+    return new Promise((resolve) => {
+      readyResolversRef.current.push(resolve);
+    });
+  }, []);
+
   useEffect(() => {
     if (!enabled || !userId) return;
+
+    // Destroy existing peer if userId changed
+    if (peerRef.current) {
+      peerRef.current.destroy();
+    }
 
     const peer = new Peer(`fp-${userId}`, {
       host: process.env.NEXT_PUBLIC_PEERJS_HOST || "0.peerjs.com",
@@ -30,9 +48,24 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
       },
     });
 
+    peerRef.current = peer;
+
+    // Route PeerJS events through refs so handlers can be set at any time
+    peer.on("call", (call) => {
+      callHandlerRef.current?.(call);
+    });
+
+    peer.on("connection", (conn) => {
+      dataHandlerRef.current?.(conn);
+    });
+
     peer.on("open", (id) => {
       setPeerId(id);
       setIsConnected(true);
+
+      // Resolve any waitForPeer promises
+      readyResolversRef.current.forEach((resolve) => resolve(peer));
+      readyResolversRef.current = [];
     });
 
     peer.on("disconnected", () => {
@@ -40,47 +73,51 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
       peer.reconnect();
     });
 
-    peer.on("error", () => {
+    peer.on("error", (err) => {
+      console.error("PeerJS error:", err);
       setIsConnected(false);
     });
-
-    peerRef.current = peer;
 
     return () => {
       peer.destroy();
       peerRef.current = null;
       setPeerId(null);
       setIsConnected(false);
+      readyResolversRef.current = [];
     };
   }, [userId, enabled]);
 
   const callPeer = useCallback(
-    (remotePeerId: string, stream: MediaStream): MediaConnection | null => {
-      if (!peerRef.current) return null;
-      const call = peerRef.current.call(remotePeerId, stream);
+    async (remotePeerId: string, stream: MediaStream): Promise<MediaConnection | null> => {
+      const peer = await waitForPeer();
+      const call = peer.call(remotePeerId, stream);
       mediaConnectionsRef.current.set(remotePeerId, call);
       return call;
     },
-    []
+    [waitForPeer]
   );
 
-  const connectData = useCallback((remotePeerId: string): DataConnection | null => {
-    if (!peerRef.current) return null;
-    const conn = peerRef.current.connect(remotePeerId);
-    dataConnectionsRef.current.set(remotePeerId, conn);
-    return conn;
-  }, []);
+  const connectData = useCallback(
+    async (remotePeerId: string): Promise<DataConnection | null> => {
+      const peer = await waitForPeer();
+      const conn = peer.connect(remotePeerId);
+      dataConnectionsRef.current.set(remotePeerId, conn);
+      return conn;
+    },
+    [waitForPeer]
+  );
 
+  // Set handlers — events are routed through refs, so these work regardless of peer state
   const onIncomingCall = useCallback(
     (handler: (call: MediaConnection) => void) => {
-      peerRef.current?.on("call", handler);
+      callHandlerRef.current = handler;
     },
     []
   );
 
   const onIncomingData = useCallback(
     (handler: (conn: DataConnection) => void) => {
-      peerRef.current?.on("connection", handler);
+      dataHandlerRef.current = handler;
     },
     []
   );
@@ -101,7 +138,6 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
     onIncomingCall,
     onIncomingData,
     closeAllConnections,
-    mediaConnections: mediaConnectionsRef.current,
-    dataConnections: dataConnectionsRef.current,
+    waitForPeer,
   };
 }

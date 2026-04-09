@@ -152,7 +152,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         // Call each existing participant
         for (const userId of otherParticipantIds) {
           const remotePeerId = `fp-${userId}`;
-          const mediaConn = peerRef.current.callPeer(remotePeerId, localStream!);
+          const mediaConn = await peerRef.current.callPeer(remotePeerId, localStream!);
           if (mediaConn) {
             wireMedia(mediaConn);
           }
@@ -169,16 +169,16 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   }, []);
 
   const handleSendChatMessage = useCallback(
-    (content: string) => {
+    async (content: string) => {
       const msg = { senderId: currentUser.userId, senderName: currentUser.fullName, content };
-      call.participants.forEach((p) => {
+      for (const p of call.participants) {
         if (p.dataConnection) {
           p.dataConnection.send(msg);
         } else {
-          const conn = peer.connectData(p.peerId);
+          const conn = await peer.connectData(p.peerId);
           if (conn) conn.on("open", () => conn.send(msg));
         }
-      });
+      }
       call.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
     },
     [call, peer, currentUser]
