@@ -76,11 +76,16 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         ]);
       });
 
-      // Only handle close if stream was actually received (connection was real)
-      let streamReceived = false;
-      mediaConn.on("stream", () => { streamReceived = true; });
+      // Ignore close events in the first 5 seconds — PeerJS fires spurious
+      // close events when connections are being set up or replaced
+      const connectedAt = Date.now();
       mediaConn.on("close", () => {
-        if (!streamReceived) return; // Connection never established — ignore
+        const elapsed = Date.now() - connectedAt;
+        if (elapsed < 5000) {
+          console.log("[wireMedia] Ignoring early close event after", elapsed, "ms");
+          return;
+        }
+        console.log("[wireMedia] Connection closed after", elapsed, "ms — ending");
         if (isGroupRef.current) {
           callRef.current.removeParticipant(remotePeerId);
         } else {
