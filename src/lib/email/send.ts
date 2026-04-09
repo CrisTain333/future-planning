@@ -8,7 +8,7 @@ interface SendEmailOptions {
   to: string;
   toUserId?: string;
   subject: string;
-  type: "payment_reminder" | "payment_receipt" | "notice" | "password_changed";
+  type: "payment_reminder" | "payment_receipt" | "notice" | "password_changed" | "meeting_invite" | "meeting_cancelled" | "meeting_reminder" | "meeting_minutes";
   react: ReactElement;
   metadata?: Record<string, unknown>;
 }
