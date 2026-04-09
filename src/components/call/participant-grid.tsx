@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MicOff } from "lucide-react";
+import { MicOff, VideoOff } from "lucide-react";
 
 interface Participant {
   peerId: string;
   name: string;
   stream: MediaStream | null;
   isMuted?: boolean;
+  isCameraOff?: boolean;
 }
 
 interface ParticipantGridProps {
@@ -15,12 +16,15 @@ interface ParticipantGridProps {
   localStream: MediaStream | null;
   screenStream: MediaStream | null;
   localName: string;
+  localIsMuted?: boolean;
+  localIsCameraOff?: boolean;
 }
 
 function VideoTile({
   stream,
   name,
   isMuted,
+  isCameraOff,
   isLocal,
   isScreen,
   className = "",
@@ -28,6 +32,7 @@ function VideoTile({
   stream: MediaStream | null;
   name: string;
   isMuted?: boolean;
+  isCameraOff?: boolean;
   isLocal?: boolean;
   isScreen?: boolean;
   className?: string;
@@ -40,9 +45,12 @@ function VideoTile({
     }
   }, [stream]);
 
+  const showVideo = stream && !isCameraOff;
+
   return (
     <div className={`relative bg-gray-800 rounded-xl overflow-hidden flex items-center justify-center ${className}`}>
-      {stream ? (
+      {/* Video or avatar fallback */}
+      {showVideo ? (
         <video
           ref={videoRef}
           autoPlay
@@ -51,20 +59,49 @@ function VideoTile({
           className={`w-full h-full object-cover ${isLocal && !isScreen ? "scale-x-[-1]" : ""}`}
         />
       ) : (
-        <div className="h-16 w-16 rounded-full bg-gray-600 flex items-center justify-center text-white text-xl font-bold">
-          {name.charAt(0).toUpperCase()}
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-20 w-20 rounded-full bg-gray-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+            {name.charAt(0).toUpperCase()}
+          </div>
+          {isCameraOff && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-700/80 text-gray-300 text-xs">
+              <VideoOff className="h-3 w-3" />
+              Camera off
+            </div>
+          )}
         </div>
       )}
-      <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded bg-black/50 text-white text-xs">
-        {name}
-        {isLocal && " (You)"}
-        {isScreen && " - Screen"}
+
+      {/* Hidden video element to keep stream active even when camera is "off" visually */}
+      {stream && isCameraOff && (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={isLocal}
+          className="hidden"
+        />
+      )}
+
+      {/* Bottom name badge */}
+      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 text-white text-xs backdrop-blur-sm">
+        {isMuted && <MicOff className="h-3 w-3 text-red-400" />}
+        <span>{name}{isLocal && " (You)"}{isScreen && " - Screen"}</span>
       </div>
-      {isMuted && (
-        <div className="absolute top-2 right-2 p-1 rounded bg-red-500/80">
-          <MicOff className="h-3 w-3 text-white" />
-        </div>
-      )}
+
+      {/* Top-right indicators */}
+      <div className="absolute top-2 right-2 flex items-center gap-1">
+        {isMuted && (
+          <div className="p-1.5 rounded-lg bg-red-500/90 shadow-sm">
+            <MicOff className="h-3.5 w-3.5 text-white" />
+          </div>
+        )}
+        {isCameraOff && showVideo === false && stream && (
+          <div className="p-1.5 rounded-lg bg-gray-600/90 shadow-sm">
+            <VideoOff className="h-3.5 w-3.5 text-white" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -74,6 +111,8 @@ export function ParticipantGrid({
   localStream,
   screenStream,
   localName,
+  localIsMuted,
+  localIsCameraOff,
 }: ParticipantGridProps) {
   const is1on1 = participants.length <= 1 && !screenStream;
 
@@ -88,6 +127,7 @@ export function ParticipantGrid({
             stream={remote.stream}
             name={remote.name}
             isMuted={remote.isMuted}
+            isCameraOff={remote.isCameraOff}
             className="absolute inset-0 rounded-none"
           />
         ) : (
@@ -104,6 +144,8 @@ export function ParticipantGrid({
             stream={localStream}
             name={localName}
             isLocal
+            isMuted={localIsMuted}
+            isCameraOff={localIsCameraOff}
             className="h-full w-full rounded-none"
           />
         </div>
@@ -127,13 +169,20 @@ export function ParticipantGrid({
       {screenStream && (
         <VideoTile stream={screenStream} name={localName} isLocal isScreen />
       )}
-      <VideoTile stream={localStream} name={localName} isLocal />
+      <VideoTile
+        stream={localStream}
+        name={localName}
+        isLocal
+        isMuted={localIsMuted}
+        isCameraOff={localIsCameraOff}
+      />
       {participants.map((p) => (
         <VideoTile
           key={p.peerId}
           stream={p.stream}
           name={p.name}
           isMuted={p.isMuted}
+          isCameraOff={p.isCameraOff}
         />
       ))}
     </div>

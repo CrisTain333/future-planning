@@ -295,6 +295,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         localStream={call.localStream}
         screenStream={call.screenStream}
         localName={currentUser.fullName}
+        localIsMuted={call.isMuted}
+        localIsCameraOff={call.isCameraOff}
       />
       <div className="flex items-center justify-center pb-6">
         <CallControls
