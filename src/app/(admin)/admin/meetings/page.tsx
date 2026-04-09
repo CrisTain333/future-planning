@@ -168,7 +168,7 @@ export default function AdminMeetingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <CalendarHeader
         view={view}
         onViewChange={setView}
@@ -180,7 +180,7 @@ export default function AdminMeetingsPage() {
         title={title}
       />
 
-      <div className="glass-card rounded-xl overflow-hidden p-0">
+      <div className="glass-card rounded-xl overflow-hidden">
         {view === "month" && (
           <CalendarMonthView
             meetings={meetings}
