@@ -28,6 +28,7 @@ function VideoTile({
   isLocal,
   isScreen,
   className = "",
+  style,
 }: {
   stream: MediaStream | null;
   name: string;
@@ -36,6 +37,7 @@ function VideoTile({
   isLocal?: boolean;
   isScreen?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -48,7 +50,7 @@ function VideoTile({
   const showVideo = stream && !isCameraOff;
 
   return (
-    <div className={`relative bg-gray-800 rounded-xl overflow-hidden flex items-center justify-center ${className}`}>
+    <div className={`relative bg-gray-800 rounded-xl overflow-hidden flex items-center justify-center ${className}`} style={style}>
       {/* Video or avatar fallback */}
       {showVideo ? (
         <video
@@ -120,18 +122,21 @@ export function ParticipantGrid({
   if (is1on1) {
     const remote = participants[0];
     return (
-      <div style={{ position: "absolute", inset: 0 }}>
+      <div style={{ width: "100%", height: "100%", position: "relative" }}>
         {/* Remote fills everything */}
         {remote ? (
-          <VideoTile
-            stream={remote.stream}
-            name={remote.name}
-            isMuted={remote.isMuted}
-            isCameraOff={remote.isCameraOff}
-            className="absolute inset-0 rounded-none"
-          />
+          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "#1f2937" }}>
+            <VideoTile
+              stream={remote.stream}
+              name={remote.name}
+              isMuted={remote.isMuted}
+              isCameraOff={remote.isCameraOff}
+              className="rounded-none"
+              style={{ width: "100%", height: "100%" }}
+            />
+          </div>
         ) : (
-          <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "#1f2937", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div className="h-24 w-24 rounded-full bg-gray-700 flex items-center justify-center text-white text-3xl font-bold">
               ?
             </div>
@@ -139,14 +144,15 @@ export function ParticipantGrid({
         )}
 
         {/* Small PiP: local camera — positioned above the controls area */}
-        <div className="absolute bottom-28 right-4 w-28 h-36 md:w-36 md:h-48 rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 z-10">
+        <div style={{ position: "absolute", bottom: "7rem", right: "1rem", width: "7rem", height: "9rem", borderRadius: "1rem", overflow: "hidden", zIndex: 10, boxShadow: "0 25px 50px -12px rgba(0,0,0,.25)", border: "2px solid rgba(255,255,255,.2)" }}>
           <VideoTile
             stream={localStream}
             name={localName}
             isLocal
             isMuted={localIsMuted}
             isCameraOff={localIsCameraOff}
-            className="h-full w-full rounded-none"
+            className="rounded-none"
+            style={{ width: "100%", height: "100%" }}
           />
         </div>
       </div>

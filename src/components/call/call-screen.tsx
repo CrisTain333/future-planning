@@ -396,7 +396,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       )}
 
       {/* Video fills entire screen */}
-      <div className="absolute inset-0">
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }}>
         <ParticipantGrid
           participants={call.participants.map((p) => ({
             peerId: p.peerId,
