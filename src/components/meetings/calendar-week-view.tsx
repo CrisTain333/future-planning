@@ -220,23 +220,29 @@ export function CalendarWeekView({
             })}
           </div>
 
-          {/* Current time indicator */}
+          {/* Current time indicator — only on today's column */}
           {showTimeLine &&
+            timeLineDayIndex >= 0 &&
             timeLineTop >= 0 &&
             timeLineTop <= totalHeight && (
               <div
-                className="absolute left-[60px] right-0 z-10 pointer-events-none"
-                style={{ top: timeLineTop }}
+                className="absolute z-10 pointer-events-none"
+                style={{
+                  top: timeLineTop,
+                  left: `calc(60px + ${(timeLineDayIndex / 7) * 100}% * (1 - 60px / 100%))`,
+                  width: `calc(100% / 7 - 60px / 7)`,
+                  // Precise column positioning
+                  ...((() => {
+                    const colWidth = `calc((100% - 60px) / 7)`;
+                    return {
+                      left: `calc(60px + ${timeLineDayIndex} * ${colWidth})`,
+                      width: colWidth,
+                    };
+                  })()),
+                }}
               >
                 <div className="relative flex items-center">
-                  {/* Red dot positioned on current day */}
-                  <div
-                    className="absolute w-3 h-3 rounded-full bg-red-500 -translate-x-1.5 -translate-y-1/2 z-20"
-                    style={{
-                      left: `calc(${(timeLineDayIndex / 7) * 100}%)`,
-                    }}
-                  />
-                  {/* Red line */}
+                  <div className="absolute -left-1.5 w-3 h-3 rounded-full bg-red-500 -translate-y-1/2 z-20" />
                   <div className="w-full h-[2px] bg-red-500" />
                 </div>
               </div>
