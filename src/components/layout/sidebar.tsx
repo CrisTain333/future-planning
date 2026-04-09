@@ -16,6 +16,7 @@ import {
   Mail,
   UserCircle,
   Landmark,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Drawer, Button } from "antd";
@@ -24,6 +25,7 @@ import { useState } from "react";
 
 const memberLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard/meetings", label: "My Meetings", icon: Video },
   { href: "/profile", label: "Profile", icon: UserCircle },
 ];
 
@@ -34,6 +36,7 @@ const adminLinks = [
   { href: "/admin/accounting", label: "Accounting", icon: Calculator },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/reports", label: "Reports", icon: FileText },
+  { href: "/admin/meetings", label: "Meetings", icon: Video },
   { href: "/admin/investments", label: "Investments", icon: Landmark },
   { href: "/admin/collection-calendar", label: "Calendar", icon: CalendarDays },
   { href: "/admin/settings", label: "Settings", icon: Settings2 },
