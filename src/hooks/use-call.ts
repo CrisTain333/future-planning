@@ -104,6 +104,7 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
       setCallState("ringing");
 
       missedTimeoutRef.current = setTimeout(async () => {
+        console.log("[useCall] 30s missed timeout fired");
         await fetch(`/api/calls/${callLogData._id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -136,11 +137,13 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
 
   // For initiator: transition to active locally when someone answers (no server call needed)
   const markActive = useCallback(() => {
+    console.log("[useCall] markActive called, clearing missed timeout");
     if (missedTimeoutRef.current) clearTimeout(missedTimeoutRef.current);
     setCallState("active");
   }, []);
 
   const endCall = useCallback(async () => {
+    console.log("[useCall] endCall triggered, callState:", callState, "stack:", new Error().stack?.split("\n").slice(1, 4).join(" <- "));
     if (missedTimeoutRef.current) clearTimeout(missedTimeoutRef.current);
 
     // Close all PeerJS media/data connections (triggers "close" on the other side)

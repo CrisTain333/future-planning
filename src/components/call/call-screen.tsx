@@ -76,7 +76,11 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         ]);
       });
 
+      // Only handle close if stream was actually received (connection was real)
+      let streamReceived = false;
+      mediaConn.on("stream", () => { streamReceived = true; });
       mediaConn.on("close", () => {
+        if (!streamReceived) return; // Connection never established — ignore
         if (isGroupRef.current) {
           callRef.current.removeParticipant(remotePeerId);
         } else {
