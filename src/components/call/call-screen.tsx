@@ -25,7 +25,28 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  useEffect(() => { setMounted(true); }, []);
+
+  const portalRef = useRef<HTMLDivElement | null>(null);
+
+  // Create a dedicated portal container directly on body
+  useEffect(() => {
+    const el = document.createElement("div");
+    el.id = "call-screen-portal";
+    el.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;margin:0;padding:0;";
+    document.body.appendChild(el);
+    portalRef.current = el;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    setMounted(true);
+
+    return () => {
+      document.body.removeChild(el);
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+      portalRef.current = null;
+    };
+  }, []);
 
   const peer = usePeer({ userId: currentUser.userId });
   const call = useCall({
@@ -325,10 +346,10 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
   const showStatusOverlay = call.callState === "ringing" || call.callState === "connecting";
 
-  if (!mounted) return null;
+  if (!mounted || !portalRef.current) return null;
 
   return createPortal(
-    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100vw", height: "100vh", zIndex: 9999, background: "#111827", display: "flex", flexDirection: "column" }}>
+    <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", background: "#111827", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {showStatusOverlay && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/95">
           <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">
@@ -427,6 +448,6 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         </div>
       )}
     </div>,
-    document.body
+    portalRef.current
   );
 }
