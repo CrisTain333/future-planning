@@ -27,6 +27,8 @@ import { Button, Table, Pagination } from "antd";
 import type { TableProps } from "antd";
 import { StatCard } from "./stat-card";
 import { FundLineChart } from "./fund-line-chart";
+import { UpcomingMeetings } from "./upcoming-meetings";
+import { MyActionItems } from "./my-action-items";
 import {
   useGetMemberDashboardQuery,
   useGetMyPaymentsQuery,
@@ -460,6 +462,24 @@ export default function MemberDashboard() {
               )}
             </CardContent>
           </Card>
+        </motion.div>
+      </div>
+
+      {/* Row 4: Meetings & Action Items */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.45 }}
+        >
+          <UpcomingMeetings />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <MyActionItems />
         </motion.div>
       </div>
     </div>

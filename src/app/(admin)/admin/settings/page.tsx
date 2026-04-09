@@ -7,6 +7,7 @@ import { Input, Button, Select, Modal, Tag } from "antd";
 import { Skeleton } from "@/components/ui/skeleton";
 import toast from "react-hot-toast";
 import { Settings } from "lucide-react";
+import { GoogleAccountSection } from "./google-account";
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -183,6 +184,9 @@ export default function SettingsPage() {
           updateSettings={updateSettings}
         />
       )}
+
+      {/* Google Calendar Integration */}
+      <GoogleAccountSection />
     </div>
   );
 }
