@@ -25,6 +25,9 @@ import {
   useCancelMeetingMutation,
   useSendReminderMutation,
 } from "@/store/meetings-api";
+import { AttendanceTab } from "./attendance-tab";
+import { MinutesTab } from "./minutes-tab";
+import { ActionItemsTab } from "./action-items-tab";
 import toast from "react-hot-toast";
 
 interface MeetingDetailDrawerProps {
@@ -143,29 +146,17 @@ export function MeetingDetailDrawer({
     {
       key: "minutes",
       label: "Minutes",
-      children: (
-        <div className="py-8 text-center text-sm text-muted-foreground">
-          Minutes Tab
-        </div>
-      ),
+      children: <MinutesTab meeting={meeting!} />,
     },
     {
       key: "attendance",
       label: "Attendance",
-      children: (
-        <div className="py-8 text-center text-sm text-muted-foreground">
-          Attendance Tab
-        </div>
-      ),
+      children: <AttendanceTab meeting={meeting!} />,
     },
     {
       key: "action-items",
       label: "Action Items",
-      children: (
-        <div className="py-8 text-center text-sm text-muted-foreground">
-          Action Items Tab
-        </div>
-      ),
+      children: <ActionItemsTab meeting={meeting!} />,
     },
   ];
 
