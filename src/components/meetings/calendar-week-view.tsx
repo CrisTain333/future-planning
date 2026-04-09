@@ -11,16 +11,23 @@ interface CalendarWeekViewProps {
   onDayClick: (date: Date) => void;
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  regular: "bg-[#40916c] border-[#40916c]/60",
-  special: "bg-[#2563eb] border-[#2563eb]/60",
-  emergency: "bg-[#dc2626] border-[#dc2626]/60",
-  cancelled: "bg-[#9ca3af] border-[#9ca3af]/60",
+const TYPE_BG: Record<string, string> = {
+  regular: "bg-[#40916c]",
+  special: "bg-[#2563eb]",
+  emergency: "bg-[#dc2626]",
+  cancelled: "bg-[#9ca3af]",
+};
+
+const TYPE_BORDER: Record<string, string> = {
+  regular: "border-l-[#2d6a4f]",
+  special: "border-l-[#1d4ed8]",
+  emergency: "border-l-[#b91c1c]",
+  cancelled: "border-l-[#6b7280]",
 };
 
 const START_HOUR = 6;
 const END_HOUR = 22;
-const HOUR_HEIGHT = 60; // px per hour
+const HOUR_HEIGHT = 64;
 
 function getWeekDays(date: Date): Date[] {
   const d = new Date(date);
@@ -78,8 +85,9 @@ export function CalendarWeekView({
   }, [meetings]);
 
   const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
+  const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i);
 
-  // Current time line position
+  // Current time indicator
   const showTimeLine = weekDays.some((d) => isSameDay(d, today));
   const timeLineTop =
     (currentTime.getHours() - START_HOUR + currentTime.getMinutes() / 60) *
@@ -87,27 +95,29 @@ export function CalendarWeekView({
   const timeLineDayIndex = weekDays.findIndex((d) => isSameDay(d, today));
 
   return (
-    <div className="glass-card rounded-xl overflow-hidden">
+    <div>
       {/* Day headers */}
-      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-white/20">
-        <div />
+      <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border">
+        <div className="border-r border-border" />
         {weekDays.map((d, i) => {
           const isToday = isSameDay(d, today);
           return (
             <div
               key={i}
               className={cn(
-                "py-2 text-center border-l border-white/10",
-                isToday && "bg-primary/10"
+                "py-3 text-center border-r border-border last:border-r-0",
+                isToday && "bg-primary/5"
               )}
             >
-              <div className="text-xs text-muted-foreground">
+              <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
                 {d.toLocaleDateString([], { weekday: "short" })}
               </div>
               <div
                 className={cn(
-                  "text-sm font-medium mx-auto w-7 h-7 flex items-center justify-center rounded-full",
-                  isToday && "bg-primary text-primary-foreground"
+                  "text-lg font-semibold mx-auto w-9 h-9 flex items-center justify-center rounded-full mt-0.5",
+                  isToday
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground"
                 )}
               >
                 {d.getDate()}
@@ -119,104 +129,116 @@ export function CalendarWeekView({
 
       {/* Time grid */}
       <div className="overflow-y-auto max-h-[600px]">
-        <div
-          className="grid grid-cols-[64px_repeat(7,1fr)] relative"
-          style={{ height: totalHeight }}
-        >
-          {/* Hour labels */}
-          <div className="relative">
-            {Array.from({ length: END_HOUR - START_HOUR }, (_, i) => (
-              <div
-                key={i}
-                className="absolute right-2 text-[10px] text-muted-foreground -translate-y-1/2"
-                style={{ top: i * HOUR_HEIGHT }}
-              >
-                {formatHour(START_HOUR + i)}
+        <div className="relative" style={{ height: totalHeight }}>
+          {/* Hour rows with labels */}
+          {hours.map((hour, i) => (
+            <div
+              key={hour}
+              className="absolute left-0 right-0 flex"
+              style={{ top: i * HOUR_HEIGHT }}
+            >
+              {/* Hour label */}
+              <div className="w-[60px] flex-shrink-0 border-r border-border relative">
+                <span className="absolute -top-[9px] right-2 text-[11px] text-muted-foreground font-medium">
+                  {i > 0 ? formatHour(hour) : ""}
+                </span>
               </div>
-            ))}
+              {/* Grid line across all columns */}
+              <div className="flex-1 border-t border-border" />
+            </div>
+          ))}
+
+          {/* Day columns (for vertical borders + meeting blocks) */}
+          <div
+            className="absolute top-0 left-[60px] right-0 grid grid-cols-7"
+            style={{ height: totalHeight }}
+          >
+            {weekDays.map((d, dayIdx) => {
+              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+              const dayMeetings = meetingsByDay[key] ?? [];
+              const isToday = isSameDay(d, today);
+
+              return (
+                <div
+                  key={dayIdx}
+                  className={cn(
+                    "relative border-r border-border last:border-r-0",
+                    isToday && "bg-primary/[0.02]"
+                  )}
+                >
+                  {/* Meeting blocks */}
+                  {dayMeetings.map((m) => {
+                    const start = new Date(m.date);
+                    const startMinutes =
+                      (start.getHours() - START_HOUR) * 60 +
+                      start.getMinutes();
+                    const top = (startMinutes / 60) * HOUR_HEIGHT;
+                    const height = (m.duration / 60) * HOUR_HEIGHT;
+
+                    if (top < 0 || top > totalHeight) return null;
+
+                    const bgClass =
+                      m.status === "cancelled"
+                        ? TYPE_BG.cancelled
+                        : TYPE_BG[m.type] ?? TYPE_BG.regular;
+                    const borderClass =
+                      m.status === "cancelled"
+                        ? TYPE_BORDER.cancelled
+                        : TYPE_BORDER[m.type] ?? TYPE_BORDER.regular;
+
+                    return (
+                      <button
+                        key={m._id}
+                        className={cn(
+                          "absolute left-1 right-1 rounded-md px-2 py-1 text-white overflow-hidden border-l-[3px] cursor-pointer shadow-sm hover:shadow-md transition-shadow",
+                          bgClass,
+                          borderClass
+                        )}
+                        style={{
+                          top: Math.max(0, top),
+                          height: Math.max(24, height),
+                          zIndex: 5,
+                        }}
+                        onClick={() => onMeetingClick(m._id)}
+                      >
+                        <div className="text-xs font-semibold truncate leading-tight">
+                          {m.title}
+                        </div>
+                        {height >= 40 && (
+                          <div className="text-[10px] opacity-90 leading-tight mt-0.5">
+                            {start.toLocaleTimeString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
-
-          {/* Day columns */}
-          {weekDays.map((d, dayIdx) => {
-            const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-            const dayMeetings = meetingsByDay[key] ?? [];
-
-            return (
-              <div
-                key={dayIdx}
-                className="relative border-l border-white/10"
-              >
-                {/* Hour grid lines */}
-                {Array.from(
-                  { length: END_HOUR - START_HOUR },
-                  (_, i) => (
-                    <div
-                      key={i}
-                      className="absolute w-full border-t border-white/5"
-                      style={{ top: i * HOUR_HEIGHT }}
-                    />
-                  )
-                )}
-
-                {/* Meeting blocks */}
-                {dayMeetings.map((m) => {
-                  const start = new Date(m.date);
-                  const startMinutes =
-                    (start.getHours() - START_HOUR) * 60 +
-                    start.getMinutes();
-                  const top = (startMinutes / 60) * HOUR_HEIGHT;
-                  const height = (m.duration / 60) * HOUR_HEIGHT;
-
-                  if (top < 0 || top > totalHeight) return null;
-
-                  const colorClass =
-                    m.status === "cancelled"
-                      ? TYPE_COLORS.cancelled
-                      : TYPE_COLORS[m.type] ?? TYPE_COLORS.regular;
-
-                  return (
-                    <button
-                      key={m._id}
-                      className={cn(
-                        "absolute left-0.5 right-0.5 rounded px-1.5 py-0.5 text-[10px] text-white overflow-hidden border-l-2 cursor-pointer",
-                        colorClass
-                      )}
-                      style={{
-                        top: Math.max(0, top),
-                        height: Math.max(20, height),
-                      }}
-                      onClick={() => onMeetingClick(m._id)}
-                    >
-                      <div className="font-medium truncate">{m.title}</div>
-                      <div className="opacity-80">
-                        {start.toLocaleTimeString([], {
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
 
           {/* Current time indicator */}
           {showTimeLine &&
             timeLineTop >= 0 &&
             timeLineTop <= totalHeight && (
               <div
-                className="absolute left-[64px] right-0 z-10 pointer-events-none flex items-center"
+                className="absolute left-[60px] right-0 z-10 pointer-events-none"
                 style={{ top: timeLineTop }}
               >
-                {/* Red dot on the current day column */}
-                <div
-                  className="absolute w-2 h-2 rounded-full bg-red-500 -translate-y-1/2"
-                  style={{
-                    left: `calc(${(timeLineDayIndex / 7) * 100}%)`,
-                  }}
-                />
-                <div className="w-full h-px bg-red-500" />
+                <div className="relative flex items-center">
+                  {/* Red dot positioned on current day */}
+                  <div
+                    className="absolute w-3 h-3 rounded-full bg-red-500 -translate-x-1.5 -translate-y-1/2 z-20"
+                    style={{
+                      left: `calc(${(timeLineDayIndex / 7) * 100}%)`,
+                    }}
+                  />
+                  {/* Red line */}
+                  <div className="w-full h-[2px] bg-red-500" />
+                </div>
               </div>
             )}
         </div>
