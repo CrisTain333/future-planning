@@ -9,6 +9,7 @@ export interface ICallLogDocument extends Document {
   initiatedBy: mongoose.Types.ObjectId;
   participants: {
     userId: mongoose.Types.ObjectId;
+    peerId: string | null;
     joinedAt: Date | null;
     leftAt: Date | null;
   }[];
@@ -28,6 +29,7 @@ const CallLogSchema = new Schema<ICallLogDocument>(
     participants: [
       {
         userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        peerId: { type: String, default: null },
         joinedAt: { type: Date, default: null },
         leftAt: { type: Date, default: null },
       },

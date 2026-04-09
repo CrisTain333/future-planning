@@ -33,19 +33,19 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
   const isGroupCall = conversation.type === "group";
 
-  // Use refs so PeerJS event handlers always access latest values
+  // Refs for stable access in PeerJS callbacks
   const callRef = useRef(call);
   callRef.current = call;
   const isGroupRef = useRef(isGroupCall);
   isGroupRef.current = isGroupCall;
-  const peerRef = useRef(peer);
-  peerRef.current = peer;
 
-  // Poll call status to detect when other side hangs up or declines
+  // Poll call status to detect when other side hangs up
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/realtime/sync?since=${encodeURIComponent(new Date(Date.now() - 5000).toISOString())}`);
+        const res = await fetch(
+          `/api/realtime/sync?since=${encodeURIComponent(new Date(Date.now() - 5000).toISOString())}`
+        );
         if (!res.ok) return;
         const json = await res.json();
         if (!json.success) return;
@@ -63,30 +63,30 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     return () => clearInterval(interval);
   }, [callLog._id]);
 
-  // Resolve user info from peerId
-  const resolveUser = (peerId: string) => {
-    const userId = peerId.replace("fp-", "");
+  // Resolve user info from a PeerJS peer ID or userId
+  const resolveUserByUserId = (userId: string) => {
     const user = conversation.participants.find(
       (p) => typeof p === "object" && (p as IUser)._id === userId
     ) as IUser | undefined;
-    return { userId, fullName: user?.fullName || "Unknown" };
+    return user?.fullName || "Unknown";
   };
 
-  // Main setup effect — runs once on mount
+  // Main setup effect
   useEffect(() => {
     let localStream: MediaStream | null = null;
+    let pollInterval: NodeJS.Timeout | null = null;
 
-    const wireMedia = (mediaConn: MediaConnection) => {
+    const wireMedia = (mediaConn: MediaConnection, remoteName: string) => {
       const remotePeerId = mediaConn.peer;
-      const { userId, fullName } = resolveUser(remotePeerId);
 
       mediaConn.on("stream", (remoteStream) => {
+        console.log("[CallScreen] Got remote stream from:", remotePeerId);
         callRef.current.setParticipants((prev) => [
           ...prev.filter((p) => p.peerId !== remotePeerId),
           {
             peerId: remotePeerId,
-            userId,
-            fullName,
+            userId: remotePeerId,
+            fullName: remoteName,
             stream: remoteStream,
             mediaConnection: mediaConn,
             dataConnection: null,
@@ -104,21 +104,36 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     };
 
     const setup = async () => {
-      console.log("[CallScreen] Setup starting, isInitiator:", isInitiator, "userId:", currentUser.userId);
-      localStream = await callRef.current.startLocalStream(callLog.type);
-      console.log("[CallScreen] Local stream ready, tracks:", localStream?.getTracks().length);
+      console.log("[CallScreen] Setup: isInitiator:", isInitiator, "userId:", currentUser.userId);
 
-      // Listen for incoming PeerJS calls (works for both initiator and joiner)
-      peerRef.current.onIncomingCall((incomingCall: MediaConnection) => {
+      // 1. Get local media stream
+      localStream = await callRef.current.startLocalStream(callLog.type);
+      console.log("[CallScreen] Local stream ready");
+
+      // 2. Wait for PeerJS to connect and get our peer ID
+      const peerInstance = await peer.waitForPeer();
+      const myPeerId = peerInstance.id;
+      console.log("[CallScreen] PeerJS connected with ID:", myPeerId);
+
+      // 3. Register our peer ID on the call record
+      await fetch(`/api/calls/${callLog._id}/peer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ peerId: myPeerId }),
+      });
+      console.log("[CallScreen] Registered peer ID on call record");
+
+      // 4. Listen for incoming PeerJS calls from other participants
+      peer.onIncomingCall((incomingCall: MediaConnection) => {
         console.log("[CallScreen] Incoming PeerJS call from:", incomingCall.peer);
         playCallConnected();
         incomingCall.answer(localStream!);
-        wireMedia(incomingCall);
+        wireMedia(incomingCall, "Participant");
         callRef.current.markActive();
       });
 
-      // Listen for incoming data connections (in-call chat)
-      peerRef.current.onIncomingData((conn: DataConnection) => {
+      // Listen for data connections
+      peer.onIncomingData((conn: DataConnection) => {
         conn.on("data", (data) => {
           const msg = data as { senderId: string; senderName: string; content: string };
           callRef.current.addInCallMessage({ ...msg, timestamp: new Date().toISOString() });
@@ -126,49 +141,69 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       });
 
       if (isInitiator) {
-        console.log("[CallScreen] Initiator: waiting for incoming calls...");
+        // Initiator: start ringing and wait for others to connect
         await callRef.current.initiateCall(callLog.type, callLog);
+        console.log("[CallScreen] Initiator: ringing, waiting for peers...");
       } else {
-        console.log("[CallScreen] Joiner: accepting call and connecting to participants");
+        // Joiner: accept call, then poll for other participants' peer IDs and call them
         await callRef.current.acceptCall(callLog);
         playCallConnected();
+        console.log("[CallScreen] Joiner: accepted, polling for other peer IDs...");
 
-        // Find who's already in the call
-        const otherParticipantIds = callLog.participants
-          .filter((p) => {
-            const pid = typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId;
-            return pid !== currentUser.userId && p.joinedAt !== null;
-          })
-          .map((p) => (typeof p.userId === "object" ? (p.userId as IUser)._id : p.userId));
+        // Poll for other participants' peer IDs
+        const connectToPeers = async () => {
+          try {
+            const res = await fetch(`/api/calls/${callLog._id}/peer`);
+            if (!res.ok) return;
+            const json = await res.json();
+            if (!json.success) return;
 
-        // Fallback: connect to initiator if no one has joinedAt set yet
-        if (otherParticipantIds.length === 0) {
-          const initiatorId =
-            typeof callLog.initiatedBy === "object"
-              ? (callLog.initiatedBy as IUser)._id
-              : callLog.initiatedBy;
-          otherParticipantIds.push(initiatorId);
-        }
+            const participants = json.data.participants as Array<{
+              userId: { _id: string; fullName: string } | string;
+              peerId: string | null;
+              joinedAt: string | null;
+            }>;
 
-        console.log("[CallScreen] Connecting to peers:", otherParticipantIds);
+            for (const p of participants) {
+              const pUserId = typeof p.userId === "object" ? p.userId._id : p.userId;
+              const pName = typeof p.userId === "object" ? p.userId.fullName : "Unknown";
 
-        // Call each existing participant
-        for (const odid of otherParticipantIds) {
-          const remotePeerId = `fp-${odid}`;
-          console.log("[CallScreen] Calling peer:", remotePeerId);
-          const mediaConn = await peerRef.current.callPeer(remotePeerId, localStream!);
-          console.log("[CallScreen] Call result:", !!mediaConn);
-          if (mediaConn) {
-            wireMedia(mediaConn);
+              // Skip self, skip those without peer ID
+              if (pUserId === currentUser.userId || !p.peerId) continue;
+
+              // Skip if already connected to this peer
+              const alreadyConnected = callRef.current.participants.some(
+                (existing) => existing.peerId === p.peerId
+              );
+              if (alreadyConnected) continue;
+
+              console.log("[CallScreen] Calling peer:", p.peerId, "for user:", pName);
+              const mediaConn = await peer.callPeer(p.peerId, localStream!);
+              if (mediaConn) {
+                wireMedia(mediaConn, pName);
+              }
+            }
+          } catch (e) {
+            console.error("[CallScreen] Error polling peers:", e);
           }
-        }
+        };
+
+        // Poll every 2s until we connect to someone
+        connectToPeers();
+        pollInterval = setInterval(connectToPeers, 2000);
+
+        // Stop polling after 30 seconds
+        setTimeout(() => {
+          if (pollInterval) clearInterval(pollInterval);
+        }, 30000);
       }
     };
 
     setup();
 
     return () => {
-      peerRef.current.closeAllConnections();
+      if (pollInterval) clearInterval(pollInterval);
+      peer.closeAllConnections();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -194,7 +229,6 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     else await call.startScreenShare();
   }, [call]);
 
-  // Display name for status overlay
   const getCallDisplayName = () => {
     if (conversation.type === "group") return conversation.name || "Group Call";
     const other = conversation.participants.find(
@@ -207,7 +241,6 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
   return (
     <div className="fixed inset-0 z-[90] bg-gray-900 flex flex-col">
-      {/* Ringing / Connecting overlay */}
       {showStatusOverlay && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/95">
           <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">

@@ -15,12 +15,10 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
   const mediaConnectionsRef = useRef<Map<string, MediaConnection>>(new Map());
   const dataConnectionsRef = useRef<Map<string, DataConnection>>(new Map());
 
-  // Queue handlers until peer is ready
   const callHandlerRef = useRef<((call: MediaConnection) => void) | null>(null);
   const dataHandlerRef = useRef<((conn: DataConnection) => void) | null>(null);
   const readyResolversRef = useRef<Array<(peer: Peer) => void>>([]);
 
-  // Returns a promise that resolves when peer is open
   const waitForPeer = useCallback((): Promise<Peer> => {
     if (peerRef.current?.open) return Promise.resolve(peerRef.current);
     return new Promise((resolve) => {
@@ -31,12 +29,13 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
   useEffect(() => {
     if (!enabled || !userId) return;
 
-    // Destroy existing peer if userId changed
     if (peerRef.current) {
       peerRef.current.destroy();
+      peerRef.current = null;
     }
 
-    const peer = new Peer(`fp-${userId}`, {
+    // Let PeerJS auto-generate ID to avoid conflicts from React strict mode / stale sessions
+    const peer = new Peer({
       host: process.env.NEXT_PUBLIC_PEERJS_HOST || "0.peerjs.com",
       port: parseInt(process.env.NEXT_PUBLIC_PEERJS_PORT || "443"),
       secure: process.env.NEXT_PUBLIC_PEERJS_SECURE !== "false",
@@ -50,14 +49,13 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
 
     peerRef.current = peer;
 
-    // Route PeerJS events through refs so handlers can be set at any time
     peer.on("call", (call) => {
       console.log("[PeerJS] Incoming call from:", call.peer);
       callHandlerRef.current?.(call);
     });
 
     peer.on("connection", (conn) => {
-      console.log("[PeerJS] Incoming data connection from:", conn.peer);
+      console.log("[PeerJS] Incoming data from:", conn.peer);
       dataHandlerRef.current?.(conn);
     });
 
@@ -66,7 +64,6 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
       setPeerId(id);
       setIsConnected(true);
 
-      // Resolve any waitForPeer promises
       readyResolversRef.current.forEach((resolve) => resolve(peer));
       readyResolversRef.current = [];
     });
@@ -93,11 +90,10 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
 
   const callPeer = useCallback(
     async (remotePeerId: string, stream: MediaStream): Promise<MediaConnection | null> => {
-      console.log("[PeerJS] Waiting for peer to be ready...");
+      console.log("[PeerJS] Waiting for peer ready to call:", remotePeerId);
       const peer = await waitForPeer();
-      console.log("[PeerJS] Calling peer:", remotePeerId, "with stream tracks:", stream.getTracks().length);
+      console.log("[PeerJS] Calling:", remotePeerId);
       const call = peer.call(remotePeerId, stream);
-      console.log("[PeerJS] Call object created:", !!call);
       mediaConnectionsRef.current.set(remotePeerId, call);
       return call;
     },
@@ -114,7 +110,6 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
     [waitForPeer]
   );
 
-  // Set handlers — events are routed through refs, so these work regardless of peer state
   const onIncomingCall = useCallback(
     (handler: (call: MediaConnection) => void) => {
       callHandlerRef.current = handler;
