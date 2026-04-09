@@ -7,16 +7,13 @@ import { useSearchParams } from "next/navigation";
 import { usePolling } from "@/hooks/use-polling";
 import { usePush } from "@/hooks/use-push";
 import { useHeartbeatMutation, useGetConversationsQuery } from "@/store/chat-api";
-import { useInitiateCallMutation } from "@/store/calls-api";
 import { IMessage, IPresence, ICallLog, IConversation, IUser } from "@/types";
 import { ChatSidebar } from "@/components/chat/chat-sidebar";
 import { ChatWindow } from "@/components/chat/chat-window";
 import { CreateConversationModal } from "@/components/chat/create-conversation-modal";
-import { IncomingCall } from "@/components/call/incoming-call";
-import { CallScreen } from "@/components/call/call-screen";
 import { MessageCircle } from "lucide-react";
-import toast from "react-hot-toast";
-import { playMessageReceived, playCallRinging } from "@/lib/sounds";
+import { playMessageReceived } from "@/lib/sounds";
+import { useCallContext } from "@/components/providers/call-provider";
 
 function ChatPageContent() {
   const { data: session } = useSession();
@@ -30,16 +27,13 @@ function ChatPageContent() {
   const [newMessages, setNewMessages] = useState<IMessage[]>([]);
   const [presenceList, setPresenceList] = useState<IPresence[]>([]);
   const [typingUsers, setTypingUsers] = useState<IPresence[]>([]);
-  const [incomingCall, setIncomingCall] = useState<ICallLog | null>(null);
-  const [activeCall, setActiveCall] = useState<{ callLog: ICallLog; isInitiator: boolean } | null>(null);
-  const [ongoingCalls, setOngoingCalls] = useState<ICallLog[]>([]);
 
   const { data: conversationsData } = useGetConversationsQuery({ limit: 50 });
   const conversations = (conversationsData?.data || []) as IConversation[];
   const activeConversation = conversations.find((c) => c._id === activeConversationId) || null;
 
-  const [initiateCall] = useInitiateCallMutation();
   const [heartbeat] = useHeartbeatMutation();
+  const { startCall, ongoingCalls, activeCall, joinCall } = useCallContext();
 
   usePush();
 
@@ -76,7 +70,6 @@ function ChatPageContent() {
   }, [presenceList]);
 
   const handleMessages = useCallback((msgs: IMessage[]) => {
-    // Play sound for messages from others
     const hasNewFromOthers = msgs.some((m) => {
       const senderId = typeof m.senderId === "object" ? (m.senderId as IUser)._id : m.senderId;
       return senderId !== currentUserId;
@@ -93,78 +86,39 @@ function ChatPageContent() {
     setTypingUsers(typing);
   }, []);
 
-  const handleCalls = useCallback(
-    (calls: ICallLog[]) => {
-      // Track all ongoing calls for "Join" banner
-      setOngoingCalls(calls);
-
-      const ringingCall = calls.find(
-        (c) =>
-          c.status === "ringing" &&
-          (typeof c.initiatedBy === "object"
-            ? (c.initiatedBy as IUser)._id
-            : c.initiatedBy) !== currentUserId
-      );
-      if (ringingCall && !activeCall) {
-        playCallRinging();
-        setIncomingCall(ringingCall);
-      }
-    },
-    [currentUserId, activeCall]
-  );
-
   usePolling({
     activeConversationId,
     onMessages: handleMessages,
     onPresence: handlePresence,
     onTyping: handleTyping,
-    onCalls: handleCalls,
     enabled: !!currentUserId,
   });
 
   const handleStartCall = useCallback(
     async (type: "audio" | "video") => {
       if (!activeConversationId) return;
-      try {
-        const result = await initiateCall({ conversationId: activeConversationId, type }).unwrap();
-        if (result.success) {
-          setActiveCall({ callLog: result.data, isInitiator: true });
-        }
-      } catch {
-        toast.error("Failed to start call");
-      }
+      await startCall(activeConversationId, type);
     },
-    [activeConversationId, initiateCall]
+    [activeConversationId, startCall]
   );
 
-  const handleAcceptCall = useCallback(() => {
-    if (incomingCall) {
-      setActiveCall({ callLog: incomingCall, isInitiator: false });
-      setIncomingCall(null);
-    }
-  }, [incomingCall]);
+  const handleJoinCall = useCallback(
+    (callLog: ICallLog) => {
+      if (!activeConversation) return;
+      joinCall(callLog, activeConversation);
+    },
+    [joinCall, activeConversation]
+  );
 
-  const handleDeclineCall = useCallback(async () => {
-    if (incomingCall) {
-      await fetch(`/api/calls/${incomingCall._id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "missed" }),
-      });
-      setIncomingCall(null);
-    }
-  }, [incomingCall]);
-
-  const handleJoinCall = useCallback((callLog: ICallLog) => {
-    setActiveCall({ callLog, isInitiator: false });
-  }, []);
-
-  // Find ongoing call for the active conversation (that the user is NOT already in)
+  // Find ongoing call for the active group conversation
   const ongoingCallForActiveConversation = useMemo(() => {
     if (!activeConversationId || activeCall) return null;
-    return ongoingCalls.find((c) =>
-      c.conversationId === activeConversationId && c.status === "active"
-    ) || null;
+    return ongoingCalls.find((c) => {
+      const convId = typeof c.conversationId === "object"
+        ? (c.conversationId as IConversation)._id
+        : c.conversationId;
+      return convId === activeConversationId && c.status === "active";
+    }) || null;
   }, [activeConversationId, ongoingCalls, activeCall]);
 
   const handleSelectConversation = useCallback((id: string) => {
@@ -177,7 +131,6 @@ function ChatPageContent() {
 
   return (
     <div className="h-[calc(100vh-3.5rem)] flex overflow-hidden">
-      {/* Sidebar: always visible on desktop, only visible on mobile when no conversation selected */}
       <div className={`
         w-full md:w-80 flex-shrink-0 md:flex md:flex-col border-r border-gray-200 bg-white
         ${activeConversationId ? "hidden md:flex" : "flex flex-col"}
@@ -190,7 +143,6 @@ function ChatPageContent() {
         />
       </div>
 
-      {/* Chat area: always visible on desktop, only visible on mobile when conversation selected */}
       <div className={`
         flex-1 flex flex-col overflow-hidden
         ${activeConversationId ? "flex" : "hidden md:flex"}
@@ -222,12 +174,6 @@ function ChatPageContent() {
         )}
       </div>
       <CreateConversationModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={(id) => setActiveConversationId(id)} />
-      {incomingCall && !activeCall && (
-        <IncomingCall callLog={incomingCall} onAccept={handleAcceptCall} onDecline={handleDeclineCall} />
-      )}
-      {activeCall && activeConversation && (
-        <CallScreen callLog={activeCall.callLog} conversation={activeConversation} isInitiator={activeCall.isInitiator} onClose={() => setActiveCall(null)} />
-      )}
     </div>
   );
 }
