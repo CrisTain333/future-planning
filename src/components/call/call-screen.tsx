@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSession } from "next-auth/react";
 import { usePeer } from "@/hooks/use-peer";
 import { useCall } from "@/hooks/use-call";
@@ -40,6 +41,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   isGroupRef.current = isGroupCall;
 
   // Poll call status to detect when other side hangs up
+  // Require 3 consecutive misses to avoid false positives from network glitches
+  const missCountRef = useRef(0);
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -55,7 +58,12 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         const state = callRef.current.callState;
 
         if (!thisCall && (state === "active" || state === "ringing" || state === "connecting")) {
-          callRef.current.endCall();
+          missCountRef.current++;
+          if (missCountRef.current >= 3) {
+            callRef.current.endCall();
+          }
+        } else {
+          missCountRef.current = 0;
         }
       } catch {}
     }, 2000);
@@ -274,8 +282,9 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
 
   const showStatusOverlay = call.callState === "ringing" || call.callState === "connecting";
 
-  return (
-    <div className="fixed inset-0 z-[90] bg-gray-900 flex flex-col">
+  // Render via portal to document.body to escape any parent overflow/transform clipping
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-gray-900 flex flex-col" style={{ width: "100vw", height: "100vh", top: 0, left: 0 }}>
       {showStatusOverlay && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/95">
           <div className="h-24 w-24 rounded-full bg-primary/20 flex items-center justify-center mb-6">
@@ -359,6 +368,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
           />
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

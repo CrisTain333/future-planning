@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { Phone, PhoneOff } from "lucide-react";
 import { ICallLog, IUser } from "@/types";
 
@@ -12,8 +13,8 @@ interface IncomingCallProps {
 export function IncomingCall({ callLog, onAccept, onDecline }: IncomingCallProps) {
   const callerName = typeof callLog.initiatedBy === "object" ? (callLog.initiatedBy as IUser).fullName : "Unknown";
 
-  return (
-    <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center" style={{ width: "100vw", height: "100vh", top: 0, left: 0 }}>
       <div className="bg-white rounded-2xl p-8 shadow-2xl text-center max-w-sm w-full mx-4">
         <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <span className="text-2xl font-bold text-primary">{callerName.charAt(0)}</span>
@@ -29,6 +30,7 @@ export function IncomingCall({ callLog, onAccept, onDecline }: IncomingCallProps
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

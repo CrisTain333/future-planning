@@ -120,7 +120,7 @@ export function ParticipantGrid({
   if (is1on1) {
     const remote = participants[0];
     return (
-      <div className="flex-1 relative">
+      <div className="flex-1 relative min-h-0">
         {/* Large: remote person */}
         {remote ? (
           <VideoTile
