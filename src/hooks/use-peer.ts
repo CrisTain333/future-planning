@@ -52,14 +52,17 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
 
     // Route PeerJS events through refs so handlers can be set at any time
     peer.on("call", (call) => {
+      console.log("[PeerJS] Incoming call from:", call.peer);
       callHandlerRef.current?.(call);
     });
 
     peer.on("connection", (conn) => {
+      console.log("[PeerJS] Incoming data connection from:", conn.peer);
       dataHandlerRef.current?.(conn);
     });
 
     peer.on("open", (id) => {
+      console.log("[PeerJS] Connected with ID:", id);
       setPeerId(id);
       setIsConnected(true);
 
@@ -69,12 +72,13 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
     });
 
     peer.on("disconnected", () => {
+      console.log("[PeerJS] Disconnected, reconnecting...");
       setIsConnected(false);
       peer.reconnect();
     });
 
     peer.on("error", (err) => {
-      console.error("PeerJS error:", err);
+      console.error("[PeerJS] Error:", err.type, err.message);
       setIsConnected(false);
     });
 
@@ -89,8 +93,11 @@ export function usePeer({ userId, enabled = true }: UsePeerOptions) {
 
   const callPeer = useCallback(
     async (remotePeerId: string, stream: MediaStream): Promise<MediaConnection | null> => {
+      console.log("[PeerJS] Waiting for peer to be ready...");
       const peer = await waitForPeer();
+      console.log("[PeerJS] Calling peer:", remotePeerId, "with stream tracks:", stream.getTracks().length);
       const call = peer.call(remotePeerId, stream);
+      console.log("[PeerJS] Call object created:", !!call);
       mediaConnectionsRef.current.set(remotePeerId, call);
       return call;
     },

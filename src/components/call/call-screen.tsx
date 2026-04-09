@@ -104,15 +104,16 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
     };
 
     const setup = async () => {
+      console.log("[CallScreen] Setup starting, isInitiator:", isInitiator, "userId:", currentUser.userId);
       localStream = await callRef.current.startLocalStream(callLog.type);
+      console.log("[CallScreen] Local stream ready, tracks:", localStream?.getTracks().length);
 
       // Listen for incoming PeerJS calls (works for both initiator and joiner)
       peerRef.current.onIncomingCall((incomingCall: MediaConnection) => {
+        console.log("[CallScreen] Incoming PeerJS call from:", incomingCall.peer);
         playCallConnected();
         incomingCall.answer(localStream!);
         wireMedia(incomingCall);
-
-        // If this is the initiator and was ringing, mark as active
         callRef.current.markActive();
       });
 
@@ -125,10 +126,10 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
       });
 
       if (isInitiator) {
-        // Initiator: start ringing, wait for callee to connect via onIncomingCall
+        console.log("[CallScreen] Initiator: waiting for incoming calls...");
         await callRef.current.initiateCall(callLog.type, callLog);
       } else {
-        // Joiner: accept the call and connect to existing participants
+        console.log("[CallScreen] Joiner: accepting call and connecting to participants");
         await callRef.current.acceptCall(callLog);
         playCallConnected();
 
@@ -149,10 +150,14 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
           otherParticipantIds.push(initiatorId);
         }
 
+        console.log("[CallScreen] Connecting to peers:", otherParticipantIds);
+
         // Call each existing participant
-        for (const userId of otherParticipantIds) {
-          const remotePeerId = `fp-${userId}`;
+        for (const odid of otherParticipantIds) {
+          const remotePeerId = `fp-${odid}`;
+          console.log("[CallScreen] Calling peer:", remotePeerId);
           const mediaConn = await peerRef.current.callPeer(remotePeerId, localStream!);
+          console.log("[CallScreen] Call result:", !!mediaConn);
           if (mediaConn) {
             wireMedia(mediaConn);
           }
