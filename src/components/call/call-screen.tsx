@@ -32,7 +32,7 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
   useEffect(() => {
     const el = document.createElement("div");
     el.id = "call-screen-portal";
-    el.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:99999;margin:0;padding:0;";
+    el.style.cssText = "position:fixed;inset:0;width:100vw;height:100dvh;z-index:99999;margin:0;padding:0;";
     document.body.appendChild(el);
     portalRef.current = el;
 
