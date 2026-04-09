@@ -103,10 +103,8 @@ export function CallScreen({ callLog, conversation, isInitiator, onClose }: Call
         incomingCall.answer(stream);
         wireMediaConnection(incomingCall, stream);
 
-        // If initiator was ringing, move to active now that someone answered
-        if (call.callState === "ringing") {
-          call.acceptCall(callLog);
-        }
+        // Initiator: transition from ringing to active (no server call — callee already did it)
+        call.markActive();
       });
 
       if (isInitiator) {

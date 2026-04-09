@@ -132,6 +132,12 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
     []
   );
 
+  // For initiator: transition to active locally when someone answers (no server call needed)
+  const markActive = useCallback(() => {
+    if (missedTimeoutRef.current) clearTimeout(missedTimeoutRef.current);
+    setCallState("active");
+  }, []);
+
   const endCall = useCallback(async () => {
     if (missedTimeoutRef.current) clearTimeout(missedTimeoutRef.current);
 
@@ -207,6 +213,7 @@ export function useCall({ onCallEnded }: UseCallOptions = {}) {
     toggleCamera,
     initiateCall,
     acceptCall,
+    markActive,
     endCall,
     removeParticipant,
     addInCallMessage,
