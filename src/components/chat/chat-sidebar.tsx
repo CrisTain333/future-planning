@@ -44,6 +44,7 @@ export function ChatSidebar({ activeConversationId, onSelectConversation, onCrea
   const contextRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession();
   const currentUserId = (session?.user as unknown as { userId: string })?.userId;
+  const userRole = (session?.user as unknown as { role: string })?.role;
   const [deleteConversation] = useDeleteConversationMutation();
 
   // Close context menu on outside click
@@ -97,13 +98,15 @@ export function ChatSidebar({ activeConversationId, onSelectConversation, onCrea
       <div className="px-4 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-bold text-gray-900">Chats</h2>
-          <button
-            onClick={onCreateNew}
-            className="h-8 w-8 rounded-full bg-[hsl(181,87%,31%)] text-white flex items-center justify-center hover:bg-[hsl(181,87%,26%)] transition-all duration-200 shadow-sm"
-            title="New conversation"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          {userRole === "admin" && (
+            <button
+              onClick={onCreateNew}
+              className="h-8 w-8 rounded-full bg-[hsl(181,87%,31%)] text-white flex items-center justify-center hover:bg-[hsl(181,87%,26%)] transition-all duration-200 shadow-sm"
+              title="New conversation"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )}
         </div>
         {/* Search bar */}
         <div className="relative">

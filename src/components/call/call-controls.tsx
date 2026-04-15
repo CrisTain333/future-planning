@@ -26,12 +26,16 @@ export function CallControls({ isMuted, isCameraOff, isScreenSharing, isChatOpen
           {isCameraOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
         </button>
       )}
-      <button onClick={onToggleScreenShare} className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${isScreenSharing ? "bg-blue-500 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}>
-        <Monitor className="h-5 w-5" />
-      </button>
-      <button onClick={onToggleChat} className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${isChatOpen ? "bg-blue-500 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}>
-        <MessageSquare className="h-5 w-5" />
-      </button>
+      {callType === "video" && (
+        <button onClick={onToggleScreenShare} className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${isScreenSharing ? "bg-blue-500 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}>
+          <Monitor className="h-5 w-5" />
+        </button>
+      )}
+      {callType === "video" && (
+        <button onClick={onToggleChat} className={`h-12 w-12 rounded-full flex items-center justify-center transition-colors ${isChatOpen ? "bg-blue-500 text-white" : "bg-gray-700 text-white hover:bg-gray-600"}`}>
+          <MessageSquare className="h-5 w-5" />
+        </button>
+      )}
       <button onClick={onEndCall} className="h-12 w-12 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors">
         <PhoneOff className="h-5 w-5" />
       </button>

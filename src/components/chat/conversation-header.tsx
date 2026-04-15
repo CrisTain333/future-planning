@@ -2,6 +2,7 @@
 
 import { IConversation, IUser, IPresence } from "@/types";
 import { Phone, Video, Users, ArrowLeft } from "lucide-react";
+import { message } from "antd";
 import { OnlineBadge } from "./online-badge";
 
 interface ConversationHeaderProps {
@@ -90,7 +91,7 @@ export function ConversationHeader({ conversation, currentUserId, presenceMap, o
           <Phone className="h-[22px] w-[22px]" strokeWidth={2.5} />
         </button>
         <button
-          onClick={onVideoCall}
+          onClick={() => message.info("Video call coming soon...")}
           className="h-10 w-10 rounded-full flex items-center justify-center text-[hsl(181,87%,31%)] hover:bg-[hsl(181,87%,31%)]/10 transition-all duration-200"
           title="Video call"
         >
