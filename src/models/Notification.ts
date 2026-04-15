@@ -6,7 +6,7 @@ if (typeof process !== "undefined" && !process.emitWarning) {
 
 export interface INotificationDocument extends Document {
   userId: mongoose.Types.ObjectId;
-  type: "payment_recorded" | "notice_posted" | "meeting_created" | "meeting_updated" | "meeting_cancelled" | "action_item_assigned";
+  type: "payment_recorded" | "notice_posted" | "meeting_created" | "meeting_updated" | "meeting_cancelled" | "action_item_assigned" | "chat_message" | "incoming_call" | "missed_call";
   title: string;
   message: string;
   referenceId: mongoose.Types.ObjectId;
@@ -17,7 +17,7 @@ export interface INotificationDocument extends Document {
 const NotificationSchema = new Schema<INotificationDocument>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    type: { type: String, enum: ["payment_recorded", "notice_posted", "meeting_created", "meeting_updated", "meeting_cancelled", "action_item_assigned"], required: true },
+    type: { type: String, enum: ["payment_recorded", "notice_posted", "meeting_created", "meeting_updated", "meeting_cancelled", "action_item_assigned", "chat_message", "incoming_call", "missed_call"], required: true },
     title: { type: String, required: true },
     message: { type: String, required: true },
     referenceId: { type: Schema.Types.ObjectId, required: true },

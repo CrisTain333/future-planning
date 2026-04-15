@@ -46,7 +46,7 @@ export interface INotice {
 export interface INotification {
   _id: string;
   userId: string;
-  type: "payment_recorded" | "notice_posted";
+  type: "payment_recorded" | "notice_posted" | "chat_message" | "incoming_call" | "missed_call";
   title: string;
   message: string;
   referenceId: string;
@@ -238,4 +238,81 @@ export interface IMeeting {
   createdBy: string | IUser;
   createdAt: string;
   updatedAt: string;
+}
+
+// --- Real-Time Chat & Calls Types ---
+
+export interface IMessage {
+  _id: string;
+  conversationId: string;
+  senderId: string | IUser;
+  content: string;
+  type: "text" | "image" | "file" | "system";
+  replyTo: string | IMessage | null;
+  readBy: { userId: string; readAt: string }[];
+  isDeleted: boolean;
+  deletedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IConversation {
+  _id: string;
+  type: "direct" | "group";
+  name: string;
+  participants: (string | IUser)[];
+  createdBy: string | IUser;
+  lastMessage: {
+    content: string;
+    senderId: string;
+    createdAt: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IPresence {
+  _id: string;
+  userId: string;
+  status: "online" | "offline";
+  lastSeen: string;
+  isTyping: {
+    conversationId: string;
+    since: string;
+  } | null;
+}
+
+export interface IPushSub {
+  _id: string;
+  userId: string;
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  deviceName: string;
+  createdAt: string;
+}
+
+export interface ICallLog {
+  _id: string;
+  conversationId: string | IConversation;
+  initiatedBy: string | IUser;
+  participants: {
+    userId: string | IUser;
+    joinedAt: string | null;
+    leftAt: string | null;
+  }[];
+  type: "audio" | "video";
+  status: "ringing" | "active" | "ended" | "missed";
+  startedAt: string | null;
+  endedAt: string | null;
+  duration: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SyncResponse {
+  messages: IMessage[];
+  presence: IPresence[];
+  typing: IPresence[];
+  calls: ICallLog[];
+  serverTime: string;
 }

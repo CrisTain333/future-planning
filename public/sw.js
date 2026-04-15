@@ -24,7 +24,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Network first for API calls and pages
   if (event.request.url.includes('/api/') || event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(event.request))
@@ -32,8 +31,60 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache first for static assets
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
+  );
+});
+
+// --- Web Push Notifications ---
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const payload = event.data.json();
+  const { title, body, icon, tag, data } = payload;
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: icon || '/android-chrome-192x192.png',
+      tag: tag || 'default',
+      data: data || {},
+      badge: '/android-chrome-192x192.png',
+      vibrate: [200, 100, 200],
+      actions:
+        data?.type === 'incoming_call'
+          ? [
+              { action: 'answer', title: 'Answer' },
+              { action: 'decline', title: 'Decline' },
+            ]
+          : [],
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const data = event.notification.data || {};
+  let targetUrl = '/chat';
+
+  if (data.type === 'chat_message' && data.conversationId) {
+    targetUrl = `/chat?id=${data.conversationId}`;
+  } else if (data.type === 'incoming_call' && data.conversationId) {
+    targetUrl = `/chat?id=${data.conversationId}&call=${data.callId}`;
+  }
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.includes('/chat') || client.url.includes('/dashboard')) {
+          client.focus();
+          client.navigate(targetUrl);
+          return;
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
   );
 });
