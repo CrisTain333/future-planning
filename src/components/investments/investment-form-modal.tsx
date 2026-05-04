@@ -185,7 +185,7 @@ export function InvestmentFormModal({
               onChange={(e) => setInterestRate(Number(e.target.value))}
               placeholder="9.5"
               min={0}
-              step={0.1}
+              step={0.01}
               required
             />
           </div>
