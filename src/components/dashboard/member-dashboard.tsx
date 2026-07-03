@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button, Table, Pagination } from "antd";
 import type { TableProps } from "antd";
 import { StatCard } from "./stat-card";
-import { FundLineChart } from "./fund-line-chart";
+import { FundHeroCard } from "./fund-hero-card";
 import { UpcomingMeetings } from "./upcoming-meetings";
 import { MyActionItems } from "./my-action-items";
 import {
@@ -274,6 +274,9 @@ export default function MemberDashboard() {
 
   return (
     <div className="space-y-5">
+      {/* Row 0: Total Fund hero card — the root highlight */}
+      <FundHeroCard data={fundGrowthChart} />
+
       {/* Row 1: Stat Cards */}
       <motion.div
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
@@ -307,8 +310,8 @@ export default function MemberDashboard() {
         />
       </motion.div>
 
-      {/* Row 2: Charts side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Row 2: My Payments chart */}
+      <div className="grid grid-cols-1 gap-5">
         {/* My Payments Bar Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -358,15 +361,6 @@ export default function MemberDashboard() {
               )}
             </CardContent>
           </Card>
-        </motion.div>
-
-        {/* Total Fund Over Time */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-        >
-          <FundLineChart data={fundGrowthChart} />
         </motion.div>
       </div>
 
